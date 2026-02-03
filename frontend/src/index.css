@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Custom styles for elderly accessibility if needed */
+body {
+  font-family: 'Inter', sans-serif;
+  /* Setup in main.html/index.html needed */
+  background-color: #f3f4f6;
+}
