@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import VoiceButton from '../components/VoiceButton';
-import { Heart, Activity, Calendar, Sun, Moon } from 'lucide-react';
+import MedicationItem from '../components/MedicationItem';
+import { Heart, Activity, Calendar, AlertCircle } from 'lucide-react';
 
 export default function ElderlyDashboard() {
     const [isRecording, setIsRecording] = useState(false);
     const [status, setStatus] = useState("Good");
+    const [medications, setMedications] = useState([
+        { id: 1, name: "Morning Pill", time: "8:00 AM", taken: false },
+        { id: 2, name: "Vitamin D", time: "10:00 AM", taken: false }
+    ]);
 
     const toggleRecording = () => {
         setIsRecording(!isRecording);
@@ -17,98 +22,97 @@ export default function ElderlyDashboard() {
         }
     };
 
-    const getTimeOfDay = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return "Good Morning";
-        if (hour < 18) return "Good Afternoon";
-        return "Good Evening";
+    const toggleMedication = (id: number) => {
+        setMedications(medications.map(med =>
+            med.id === id ? { ...med, taken: !med.taken } : med
+        ));
+    };
+
+    const handleSOS = () => {
+        alert("🆘 Calling Caregiver... Emergency Alert Sent!");
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rose-50 to-orange-50 p-6 md:p-12 transition-all duration-500 ease-in-out">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+        <div className="min-h-screen bg-gray-50 p-4 pb-24 flex flex-col items-center">
+            {/* Header */}
+            <header className="w-full max-w-md flex justify-between items-center mb-8 mt-2">
+                <div>
+                    <h1 className="text-3xl font-extrabold text-gray-900">Hello, Fatima</h1>
+                    <p className="text-gray-600 text-lg mt-1">Ready for the day?</p>
+                </div>
+                <div className="bg-white p-2 rounded-full shadow-sm border border-gray-100">
+                    <img
+                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima"
+                        alt="Profile"
+                        className="w-14 h-14 rounded-full"
+                    />
+                </div>
+            </header>
 
-                {/* Header Section (Top on mobile, Left Col on Desktop) */}
-                <header className="lg:col-span-8 flex flex-col justify-center">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="bg-white p-2 rounded-full shadow-md">
-                            <Sun className="w-8 h-8 text-orange-400" />
-                        </div>
-                        <span className="text-xl text-gray-500 font-medium">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                        </span>
-                    </div>
+            {/* Quick Mood Selector */}
+            <section className="w-full max-w-md mb-8">
+                <h2 className="text-lg font-semibold text-gray-700 mb-4 ml-1">How do you feel?</h2>
+                <div className="flex justify-between gap-4">
+                    {['😊', '😐', '😔'].map((emoji, idx) => (
+                        <button
+                            key={idx}
+                            className="flex-1 bg-white border border-gray-200 rounded-2xl h-24 text-4xl shadow-sm hover:bg-indigo-50 hover:border-indigo-200 transition-all active:scale-95"
+                            onClick={() => setStatus(idx === 0 ? "Great" : idx === 1 ? "Okay" : "Unwell")}
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+            </section>
 
-                    <h1 className="text-5xl md:text-7xl font-bold text-gray-800 tracking-tight leading-tight mb-4">
-                        {getTimeOfDay()}, <br /> <span className="text-rose-500">Fatima</span>
-                    </h1>
-                    <p className="text-2xl text-gray-500 font-light max-w-2xl">
-                        I'm here to listen. How are you feeling right now?
-                    </p>
-                </header>
+            {/* Main Action Area */}
+            <main className="flex flex-col items-center justify-center w-full max-w-md mb-10">
+                <VoiceButton isRecording={isRecording} onClick={toggleRecording} />
+                <p className="text-gray-400 mt-6 text-sm font-medium uppercase tracking-wide">Tap microphone to speak</p>
+            </main>
 
-                {/* Profile & Navigation (Right Col Top) */}
-                <div className="lg:col-span-4 flex flex-col items-end gap-4">
-                    <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm p-4 rounded-3xl shadow-sm border border-white/50">
-                        <div className="text-right hidden sm:block">
-                            <p className="font-bold text-gray-800">Fatima Al-Zahra</p>
-                            <p className="text-sm text-gray-500">EchoCare User</p>
-                        </div>
-                        <img
-                            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima"
-                            alt="Profile"
-                            className="w-16 h-16 rounded-full border-4 border-white shadow-md"
+            {/* Medication List */}
+            <section className="w-full max-w-md mb-8">
+                <h2 className="text-lg font-semibold text-gray-700 mb-4 ml-1">Daily Medicines</h2>
+                <div className="flex flex-col gap-0">
+                    {medications.map(med => (
+                        <MedicationItem
+                            key={med.id}
+                            name={med.name}
+                            time={med.time}
+                            taken={med.taken}
+                            onToggle={() => toggleMedication(med.id)}
                         />
-                    </div>
+                    ))}
+                </div>
+            </section>
 
-                    <a href="/caretaker" className="group flex items-center gap-2 bg-white/80 hover:bg-white text-gray-600 px-6 py-3 rounded-full shadow-sm hover:shadow-md transition-all border border-gray-100 font-medium">
-                        Caretaker View
-                        <span className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center text-xs group-hover:bg-gray-800 group-hover:text-white transition-colors">→</span>
-                    </a>
+            {/* Vital Stats */}
+            <section className="w-full max-w-md grid grid-cols-2 gap-4 mb-20">
+                <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2">
+                    <Heart className="w-8 h-8 text-red-500 mb-1" />
+                    <span className="text-gray-500 font-medium text-sm">Heart Rate</span>
+                    <span className="text-2xl font-bold text-gray-800">72 <span className="text-sm text-gray-400 font-normal">bpm</span></span>
+                </div>
+                <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2">
+                    <Activity className="w-8 h-8 text-blue-500 mb-1" />
+                    <span className="text-gray-500 font-medium text-sm">Status</span>
+                    <span className={`text-xl font-bold ${status === 'Unwell' ? 'text-red-500' : 'text-green-600'}`}>
+                        {status}
+                    </span>
                 </div>
 
-                {/* Main Interaction Area (Center-Left) */}
-                <main className="lg:col-span-8 flex flex-col items-center justify-center py-12 lg:py-0">
-                    <div className="relative">
-                        {/* Pulsing effect behind button */}
-                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-rose-200 rounded-full blur-3xl opacity-30 animate-pulse ${isRecording ? 'bg-red-400 scale-125' : ''}`}></div>
-                        <VoiceButton isRecording={isRecording} onClick={toggleRecording} />
-                        <p className={`mt-8 text-center text-xl font-medium transition-colors ${isRecording ? 'text-rose-600 animate-pulse' : 'text-gray-400'}`}>
-                            {isRecording ? "Listening..." : "Tap to Speak"}
-                        </p>
-                    </div>
-                </main>
-
-                {/* Status Cards (Right Column) */}
-                <aside className="lg:col-span-4 flex flex-col gap-6 justify-center">
-                    <div className="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/50 hover:shadow-xl transition-shadow duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-red-50 p-4 rounded-2xl">
-                                <Heart className="w-8 h-8 text-red-500" />
-                            </div>
-                            <span className="text-xl text-gray-600 font-medium">Heart Rate</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-6xl font-bold text-gray-800">72</span>
-                            <span className="text-xl text-gray-400 font-medium">bpm</span>
-                        </div>
-                        <p className="text-gray-400 mt-2">Normal rhythm</p>
-                    </div>
-
-                    <div className="bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-lg border border-white/50 hover:shadow-xl transition-shadow duration-300">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="bg-blue-50 p-4 rounded-2xl">
-                                <Activity className="w-8 h-8 text-blue-500" />
-                            </div>
-                            <span className="text-xl text-gray-600 font-medium">Status</span>
-                        </div>
-                        <span className="text-4xl font-bold text-gray-800 block mb-2">{status}</span>
-                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-green-500 w-full rounded-full"></div>
-                        </div>
-                    </div>
-                </aside>
+            {/* SOS Button - Fixed at Bottom */}
+            <div className="fixed bottom-6 w-full max-w-md px-4">
+                <button
+                    onClick={handleSOS}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 transition-colors"
+                >
+                    <AlertCircle className="w-6 h-6" />
+                    <span className="text-xl">EMERGENCY SOS</span>
+                </button>
             </div>
+
         </div>
     );
 }

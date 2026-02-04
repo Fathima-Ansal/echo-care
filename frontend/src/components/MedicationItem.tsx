@@ -1,0 +1,36 @@
+import { CheckCircle, Circle } from 'lucide-react';
+
+interface MedicationItemProps {
+    name: string;
+    time: string;
+    taken: boolean;
+    onToggle: () => void;
+}
+
+export default function MedicationItem({ name, time, taken, onToggle }: MedicationItemProps) {
+    return (
+        <button
+            onClick={onToggle}
+            className={`
+        w-full flex items-center justify-between p-5 rounded-2xl border mb-3 transition-colors
+        ${taken
+                    ? 'bg-green-50 border-green-200 opacity-60'
+                    : 'bg-white border-gray-100 hover:border-gray-300'
+                }
+      `}
+        >
+            <div className="flex flex-col items-start">
+                <span className={`text-xl font-semibold ${taken ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                    {name}
+                </span>
+                <span className="text-gray-500 text-base">{time}</span>
+            </div>
+
+            {taken ? (
+                <CheckCircle className="w-10 h-10 text-green-500" />
+            ) : (
+                <Circle className="w-10 h-10 text-gray-300" />
+            )}
+        </button>
+    );
+}
