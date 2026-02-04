@@ -34,6 +34,11 @@ export default function ElderlyDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-4 pb-24 flex flex-col items-center">
+            {/* Navigation Switch */}
+            <a href="/caretaker" className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-blue-700 transition-colors z-50">
+                Switch to Caretaker View
+            </a>
+
             {/* Header */}
             <header className="w-full max-w-md flex justify-between items-center mb-8 mt-2">
                 <div>
