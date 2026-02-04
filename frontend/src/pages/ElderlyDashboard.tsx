@@ -101,7 +101,6 @@ export default function ElderlyDashboard() {
                         {status}
                     </span>
                 </div>
-            </section>
 
             {/* SOS Button - Fixed at Bottom */}
             <div className="fixed bottom-6 w-full max-w-md px-4">
