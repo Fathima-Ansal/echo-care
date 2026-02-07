@@ -16,7 +16,7 @@ export default function CaretakerDashboard() {
         statusMessage: 'Heart rate slightly elevated during morning walk.'
     };
 
-    const getStatusColor = (level: string) => {
+    const getStatusColor = (level) => {
         switch (level.toLowerCase()) {
             case 'high': return 'bg-red-100 text-red-700 border-red-200';
             case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
@@ -103,7 +103,7 @@ export default function CaretakerDashboard() {
                                         <td className="py-4 text-gray-600 text-sm">{record.date}</td>
                                         <td className="py-4 text-gray-800 font-medium text-sm">
                                             <span className={`px-2 py-1 rounded-full text-xs ${record.type === 'Emergency' ? 'bg-red-50 text-red-600' :
-                                                    record.type === 'Routine Checkup' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'
+                                                record.type === 'Routine Checkup' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'
                                                 }`}>
                                                 {record.type}
                                             </span>

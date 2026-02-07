@@ -1,13 +1,6 @@
 import { CheckCircle, Circle } from 'lucide-react';
 
-interface MedicationItemProps {
-    name: string;
-    time: string;
-    taken: boolean;
-    onToggle: () => void;
-}
-
-export default function MedicationItem({ name, time, taken, onToggle }: MedicationItemProps) {
+export default function MedicationItem({ name, time, taken, onToggle }) {
     return (
         <button
             onClick={onToggle}
