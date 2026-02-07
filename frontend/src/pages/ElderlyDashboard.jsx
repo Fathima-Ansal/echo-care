@@ -22,7 +22,7 @@ export default function ElderlyDashboard() {
         }
     };
 
-    const toggleMedication = (id: number) => {
+    const toggleMedication = (id) => {
         setMedications(medications.map(med =>
             med.id === id ? { ...med, taken: !med.taken } : med
         ));
