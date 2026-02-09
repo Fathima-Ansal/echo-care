@@ -4,14 +4,21 @@ import './App.css';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <header className="mb-8 overflow-hidden text-center">
-        <h1 className="text-4xl font-bold text-blue-600">EchoCare</h1>
-        <p className="text-gray-600 mt-2">Voice-based Health Diary</p>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex flex-col items-center justify-center p-4 font-sans">
+      <header className="mb-10 text-center">
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
+          EchoCare
+        </h1>
+        <p className="text-xl text-slate-500 mt-3 font-light">
+          Your Personal Voice Health Companion
+        </p>
       </header>
-      <main className="w-full max-w-4xl p-4">
+      <main className="w-full">
         <VoiceRecorder />
       </main>
+      <footer className="mt-12 text-slate-400 text-sm">
+        Designed for You ❤️
+      </footer>
     </div>
   );
 }
