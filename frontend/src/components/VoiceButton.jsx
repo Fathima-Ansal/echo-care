@@ -2,23 +2,42 @@ import { Mic } from 'lucide-react';
 
 export default function VoiceButton({ isRecording, onClick }) {
     return (
-        <button
-            onClick={onClick}
-            className={`
-        relative flex items-center justify-center w-48 h-48 rounded-full border-4 transition-all duration-300 shadow-xl
-        ${isRecording
-                    ? 'bg-[#D32F2F] border-[#B71C1C] animate-pulse scale-105'
-                    : 'bg-[#1976D2] border-[#1565C0] hover:scale-105 hover:bg-[#1565C0]'
-                }
-      `}
-            aria-label={isRecording ? "Stop Recording" : "Start Recording"}
-        >
-            <Mic className={`w-24 h-24 ${isRecording ? 'text-white' : 'text-white'}`} />
+        <div className="relative flex items-center justify-center">
+            {/* Pulsing rings when recording */}
+            {isRecording && (
+                <>
+                    <div className="absolute w-64 h-64 bg-red-500/20 rounded-full animate-ping" />
+                    <div className="absolute w-56 h-56 bg-red-500/30 rounded-full animate-pulse" />
+                </>
+            )}
 
-            {/* Ripple effect text/hint */}
-            <span className="absolute -bottom-16 text-xl font-medium text-[#222222]">
-                {isRecording ? "Listening..." : "Tap to Speak"}
-            </span>
-        </button>
+            <button
+                onClick={onClick}
+                className={`
+                    relative flex items-center justify-center w-48 h-48 rounded-full 
+                    backdrop-blur-md border-[6px] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.15)]
+                    ${isRecording
+                        ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 rotate-180 scale-110'
+                        : 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400 hover:scale-105 hover:-translate-y-2'
+                    }
+                `}
+                aria-label={isRecording ? "Stop Recording" : "Start Recording"}
+            >
+                <div className={`transition-transform duration-500 ${isRecording ? 'rotate-180' : ''}`}>
+                    <Mic className={`w-20 h-20 text-white drop-shadow-md`} strokeWidth={1.5} />
+                </div>
+            </button>
+
+
+            {/* Status Label - Now part of flow to prevent overlap */}
+            <div className={`
+                mt-8 px-8 py-3 rounded-full backdrop-blur-md transition-all duration-500
+                ${isRecording ? 'bg-red-100/80 text-red-600' : 'bg-white/60 text-slate-600 shadow-sm border border-white/50'}
+            `}>
+                <span className="text-xl font-bold tracking-wide">
+                    {isRecording ? "Listening..." : "Tap to Speak"}
+                </span>
+            </div>
+        </div >
     );
 }
