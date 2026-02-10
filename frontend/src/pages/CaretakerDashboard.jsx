@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Heart, Activity, AlertTriangle } from 'lucide-react';
 
 export default function CaretakerDashboard() {
@@ -28,9 +29,9 @@ export default function CaretakerDashboard() {
     return (
         <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
             {/* Navigation for Demo */}
-            <a href="/" className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-blue-700 transition-colors z-50">
+            <Link to="/" className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-blue-700 transition-colors z-50">
                 Switch to Elderly View
-            </a>
+            </Link>
 
             {/* Header */}
             <header className="w-full max-w-4xl flex justify-between items-center mb-8 mt-4">
