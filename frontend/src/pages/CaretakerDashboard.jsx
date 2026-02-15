@@ -1,13 +1,18 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Activity, AlertTriangle } from 'lucide-react';
 
 export default function CaretakerDashboard() {
     // Mock data for health records
-    const healthRecords = [
-        { id: 1, date: '2023-10-25', type: 'Routine Checkup', notes: 'Blood pressure normal. Recommended light exercise.', doctor: 'Dr. Smith' },
-        { id: 2, date: '2023-10-18', type: 'Emergency', notes: 'Sudden dizziness. Observation required.', doctor: 'Dr. Lee' },
-        { id: 3, date: '2023-10-10', type: 'Video Consult', notes: 'Discussed medication dosage adjustment.', doctor: 'Dr. Smith' },
-    ];
+    // State for health logs
+    const [healthLogs, setHealthLogs] = useState([]);
+
+    useEffect(() => {
+        fetch('http://127.0.0.1:5000/api/logs')
+            .then(res => res.json())
+            .then(data => setHealthLogs(data))
+            .catch(err => console.error("Error fetching logs:", err));
+    }, []);
 
     // Mock status data
     const currentStatus = {
@@ -94,25 +99,31 @@ export default function CaretakerDashboard() {
                                 <tr className="text-sm text-gray-400 border-b border-gray-100">
                                     <th className="py-3 font-medium">Date</th>
                                     <th className="py-3 font-medium">Type</th>
-                                    <th className="py-3 font-medium">Doctor</th>
                                     <th className="py-3 font-medium">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {healthRecords.map((record) => (
-                                    <tr key={record.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                                        <td className="py-4 text-gray-600 text-sm">{record.date}</td>
-                                        <td className="py-4 text-gray-800 font-medium text-sm">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${record.type === 'Emergency' ? 'bg-red-50 text-red-600' :
-                                                record.type === 'Routine Checkup' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'
-                                                }`}>
-                                                {record.type}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 text-gray-600 text-sm">{record.doctor}</td>
-                                        <td className="py-4 text-gray-500 text-sm max-w-xs truncate" title={record.notes}>{record.notes}</td>
+                                {healthLogs.length > 0 ? (
+                                    healthLogs.map((log) => (
+                                        <tr key={log._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                                            <td className="py-4 text-gray-600 text-sm">
+                                                {new Date(log.timestamp).toLocaleDateString()}
+                                                <br />
+                                                <span className="text-xs text-gray-400">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </td>
+                                            <td className="py-4 text-gray-800 font-medium text-sm">
+                                                <span className="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-600">
+                                                    Voice Log
+                                                </span>
+                                            </td>
+                                            <td className="py-4 text-gray-500 text-sm max-w-xs truncate" title={log.text}>"{log.text}"</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="py-4 text-center text-gray-400">No logs found.</td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>
