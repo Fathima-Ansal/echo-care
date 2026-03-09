@@ -2,3 +2,5 @@ Flask
 Flask-Cors
 SpeechRecognition
 pydub
+bcrypt
+PyJWT
