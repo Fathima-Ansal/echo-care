@@ -18,7 +18,7 @@ export default function VoiceButton({ isRecording, onClick }) {
                     backdrop-blur-md border-[6px] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.15)]
                     ${isRecording
                         ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 rotate-180 scale-110'
-                        : 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400 hover:scale-105 hover:-translate-y-2'
+                        : 'bg-gradient-to-br from-[#AEB784] to-[#8a9461] border-[#AEB784]/50 hover:scale-105 hover:-translate-y-2'
                     }
                 `}
                 aria-label={isRecording ? "Stop Recording" : "Start Recording"}

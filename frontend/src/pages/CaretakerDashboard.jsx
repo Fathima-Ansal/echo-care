@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import { Heart, Activity, AlertTriangle } from 'lucide-react';
 
 export default function CaretakerDashboard() {
-    // Mock data for health records
-    // State for health logs
+    const { token, logout, userEmail } = useContext(AuthContext);
     const [healthLogs, setHealthLogs] = useState([]);
+
+    // State for creating elderly account
+    const [elderlyEmail, setElderlyEmail] = useState('');
+    const [elderlyPassword, setElderlyPassword] = useState('');
+    const [createMsg, setCreateMsg] = useState({ text: '', type: '' });
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         fetch('http://127.0.0.1:5000/api/logs')
@@ -31,21 +37,27 @@ export default function CaretakerDashboard() {
         }
     };
 
-    return (
-        <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
-            {/* Navigation for Demo */}
-            <Link to="/" className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg text-sm hover:bg-blue-700 transition-colors z-50">
-                Switch to Elderly View
-            </Link>
+    const getCaregiverName = () => {
+        if (!userEmail) return "Caregiver";
+        return userEmail.split('@')[0];
+    };
 
+    return (
+        <div className="min-h-screen bg-[#F9F9F6] p-6 flex flex-col items-center font-sans text-[#41431B]">
             {/* Header */}
             <header className="w-full max-w-4xl flex justify-between items-center mb-8 mt-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Caretaker Dashboard</h1>
-                    <p className="text-gray-500 text-lg">Monitoring: <span className="font-semibold text-gray-700">Fatima</span></p>
+                    <h1 className="text-3xl font-bold text-[#41431B]">Caretaker Dashboard</h1>
+                    <p className="text-[#AEB784] text-lg font-medium">Welcome, <span className="font-bold capitalize">{getCaregiverName()}</span></p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">Last updated: Just now</span>
+                    <span className="text-sm text-[#AEB784] mr-4 font-medium">Last updated: Just now</span>
+                    <button
+                        onClick={logout}
+                        className="bg-white border-2 border-[#AEB784] hover:bg-[#AEB784] hover:text-white text-[#41431B] px-6 py-2 rounded-full shadow-sm text-sm font-semibold transition-colors"
+                    >
+                        Logout
+                    </button>
                 </div>
             </header>
 
@@ -62,41 +74,117 @@ export default function CaretakerDashboard() {
                     </div>
 
                     {/* Heart Rate Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-start justify-between h-32">
-                        <div className="flex items-center gap-2 text-red-500">
-                            <Heart className="w-5 h-5" />
-                            <span className="font-medium text-gray-600">Heart Rate</span>
+                    <div className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm flex flex-col items-start justify-between h-32">
+                        <div className="flex items-center gap-2 text-[#AEB784]">
+                            <Heart className="w-5 h-5 fill-current" />
+                            <span className="font-semibold text-[#41431B]">Heart Rate</span>
                         </div>
-                        <span className="text-3xl font-bold text-gray-800">{currentStatus.heartRate} <span className="text-sm text-gray-400 font-normal">bpm</span></span>
+                        <span className="text-3xl font-bold text-[#41431B]">{currentStatus.heartRate} <span className="text-sm text-[#AEB784] font-normal">bpm</span></span>
                     </div>
 
                     {/* Last Activity Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-start justify-between h-32">
-                        <div className="flex items-center gap-2 text-blue-500">
+                    <div className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm flex flex-col items-start justify-between h-32">
+                        <div className="flex items-center gap-2 text-[#AEB784]">
                             <Activity className="w-5 h-5" />
-                            <span className="font-medium text-gray-600">Last Activity</span>
+                            <span className="font-semibold text-[#41431B]">Last Activity</span>
                         </div>
-                        <span className="text-xl font-bold text-gray-800">{currentStatus.lastActivity}</span>
+                        <span className="text-xl font-bold text-[#41431B]">{currentStatus.lastActivity}</span>
                     </div>
                 </section>
 
+                {/* --- Create Elderly Account Section --- */}
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
+                    <h2 className="text-lg font-bold text-[#41431B] mb-2">Manage Elderly Accounts</h2>
+                    <p className="text-sm text-[#AEB784] mb-4 font-medium">Create login credentials for the elderly users you care for.</p>
+
+                    {createMsg.text && (
+                        <div className={`p-3 rounded-lg mb-4 text-sm ${createMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+                            {createMsg.text}
+                        </div>
+                    )}
+
+                    <form
+                        className="flex flex-col md:flex-row gap-4 items-start md:items-end"
+                        onSubmit={async (e) => {
+                            e.preventDefault();
+                            setCreateMsg({ text: '', type: '' });
+                            setIsCreating(true);
+
+                            try {
+                                const response = await fetch('http://localhost:5000/api/create-elderly', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({ email: elderlyEmail, password: elderlyPassword }),
+                                });
+
+                                const data = await response.json();
+
+                                if (!response.ok) throw new Error(data.error || 'Failed to create account');
+
+                                setCreateMsg({ text: 'Account created successfully!', type: 'success' });
+                                setElderlyEmail('');
+                                setElderlyPassword('');
+
+                                setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
+                            } catch (err) {
+                                setCreateMsg({ text: err.message, type: 'error' });
+                            } finally {
+                                setIsCreating(false);
+                            }
+                        }}
+                    >
+                        <div className="flex-1 w-full">
+                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Username / Email</label>
+                            <input
+                                type="text"
+                                required
+                                value={elderlyEmail}
+                                onChange={(e) => setElderlyEmail(e.target.value)}
+                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                placeholder="e.g. grandpa_joe"
+                            />
+                        </div>
+                        <div className="flex-1 w-full">
+                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Password</label>
+                            <input
+                                type="password"
+                                required
+                                value={elderlyPassword}
+                                onChange={(e) => setElderlyPassword(e.target.value)}
+                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                placeholder="Create a password"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isCreating}
+                            className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
+                        >
+                            {isCreating ? 'Creating...' : 'Create Account'}
+                        </button>
+                    </form>
+                </section>
+
                 {/* Detailed Status Message */}
-                <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-2">Current Condition</h2>
-                    <p className="text-gray-600">{currentStatus.statusMessage}</p>
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
+                    <h2 className="text-lg font-bold text-[#41431B] mb-2">Current Condition</h2>
+                    <p className="text-[#41431B] opacity-80 font-medium">{currentStatus.statusMessage}</p>
                 </section>
 
                 {/* Health Records Table */}
-                <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-lg font-semibold text-gray-800">Health Records</h2>
-                        <button className="text-sm text-blue-600 font-medium hover:underline">View All</button>
+                        <h2 className="text-lg font-bold text-[#41431B]">Health Records</h2>
+                        <button className="text-sm text-[#AEB784] font-bold hover:underline">View All</button>
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="text-sm text-gray-400 border-b border-gray-100">
+                                <tr className="text-sm text-[#AEB784] border-b border-[#AEB784]/20">
                                     <th className="py-3 font-medium">Date</th>
                                     <th className="py-3 font-medium">Type</th>
                                     <th className="py-3 font-medium">Notes</th>
@@ -105,23 +193,23 @@ export default function CaretakerDashboard() {
                             <tbody>
                                 {healthLogs.length > 0 ? (
                                     healthLogs.map((log) => (
-                                        <tr key={log._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                                            <td className="py-4 text-gray-600 text-sm">
+                                        <tr key={log._id} className="border-b border-[#AEB784]/10 last:border-0 hover:bg-[#F9F9F6] transition-colors">
+                                            <td className="py-4 text-[#41431B] text-sm font-medium">
                                                 {new Date(log.timestamp).toLocaleDateString()}
                                                 <br />
-                                                <span className="text-xs text-gray-400">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span className="text-xs text-[#AEB784]">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </td>
-                                            <td className="py-4 text-gray-800 font-medium text-sm">
-                                                <span className="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-600">
+                                            <td className="py-4 text-[#41431B] font-medium text-sm">
+                                                <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] font-bold">
                                                     Voice Log
                                                 </span>
                                             </td>
-                                            <td className="py-4 text-gray-500 text-sm max-w-xs truncate" title={log.text}>"{log.text}"</td>
+                                            <td className="py-4 text-[#41431B] opacity-80 text-sm max-w-xs truncate" title={log.text}>"{log.text}"</td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" className="py-4 text-center text-gray-400">No logs found.</td>
+                                        <td colSpan="4" className="py-4 text-center text-[#AEB784] font-medium">No logs found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -130,15 +218,15 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* Progress/Adherence Tracking Placeholder */}
-                <section className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mb-8">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Weekly Adherence</h2>
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm mb-8">
+                    <h2 className="text-lg font-bold text-[#41431B] mb-4">Weekly Adherence</h2>
                     <div className="flex items-center gap-4">
-                        <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 w-3/4 rounded-full"></div>
+                        <div className="flex-1 h-3 bg-[#F9F9F6] rounded-full overflow-hidden border border-[#AEB784]/20">
+                            <div className="h-full bg-[#AEB784] w-3/4 rounded-full"></div>
                         </div>
-                        <span className="text-gray-600 font-medium">75%</span>
+                        <span className="text-[#41431B] font-bold">75%</span>
                     </div>
-                    <p className="text-sm text-gray-400 mt-2">Medication and exercise adherence for this week.</p>
+                    <p className="text-sm text-[#AEB784] font-medium mt-2">Medication and exercise adherence for this week.</p>
                 </section>
             </main>
         </div>

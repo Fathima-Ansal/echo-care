@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import VoiceButton from '../components/VoiceButton';
 import MedicationItem from '../components/MedicationItem';
 import { Heart, Activity, AlertCircle, Phone, Sun, Cloud, CloudRain, Wind } from 'lucide-react';
 import { encodeWAV } from '../utils/wavEncoder';
 
 export default function ElderlyDashboard() {
+    const { logout, userEmail } = useContext(AuthContext);
     const [isRecording, setIsRecording] = useState(false);
     const [status, setStatus] = useState("Good");
     const [transcription, setTranscription] = useState('');
@@ -170,176 +172,180 @@ export default function ElderlyDashboard() {
         return "Good Evening";
     };
 
+    // Helper to extract name from email
+    const getUserName = () => {
+        if (!userEmail) return "Guest";
+        return userEmail.split('@')[0];
+    };
+
     return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+        <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#41431B]">
 
-        {/* Background */}
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
-            <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-100 to-transparent"></div>
-            <div className="absolute -top-20 -right-20 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-50"></div>
-            <div className="absolute top-40 -left-20 w-72 h-72 bg-indigo-200 rounded-full blur-3xl opacity-50"></div>
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:px-8 pb-32">
-
-            {/* HEADER */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8">
-                <div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-                        {getGreeting()}, Fatima
-                    </h1>
-                    <p className="text-slate-500 text-xl mt-3 font-medium">
-                        Ready for a great day?
-                    </p>
-                </div>
-            </header>
-
-            {/* MAIN GRID */}
-            <main className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-10">
-
-                {/* LEFT COLUMN */}
-                <div className="xl:col-span-7 flex flex-col gap-8">
-
-                    {/* VOICE CARD */}
-                    <div className="bg-white rounded-3xl p-10 shadow-lg flex flex-col items-center justify-center min-h-[500px]">
-
-                        <VoiceButton
-                            isRecording={isRecording}
-                            onClick={toggleRecording}
-                        />
-
-                        <div className="mt-8 text-center">
-                            {transcription ? (
-                                <p className="text-2xl font-medium">
-                                    "{transcription}"
-                                </p>
-                            ) : (
-                                <p className="text-slate-400 text-xl">
-                                    Tap microphone to speak
-                                </p>
-                            )}
-
-                            {audioURL && (
-                                <audio
-                                    src={audioURL}
-                                    controls
-                                    className="mt-4"
-                                />
-                            )}
-                        </div>
-                    </div>
-
-                    {/* RECENT HEALTH LOGS */}
-                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-                            <Activity className="w-6 h-6 text-blue-500" />
-                            Recent Health Logs
-                        </h2>
-
-                        <div className="space-y-4 max-h-60 overflow-y-auto">
-                            {healthLogs.length > 0 ? (
-                                healthLogs.slice(0, 5).map((log) => (
-                                    <div
-                                        key={log._id}
-                                        className="p-4 bg-slate-50 rounded-xl"
-                                    >
-                                        <p className="font-medium">
-                                            "{log.text}"
-                                        </p>
-                                        <p className="text-sm text-slate-400 mt-1">
-                                            {new Date(log.timestamp).toLocaleString()}
-                                        </p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-slate-400 text-center">
-                                    No recent logs found.
-                                </p>
-                            )}
-                        </div>
-                    </section>
-
-                    {/* MEDICATIONS */}
-                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-                            <Sun className="w-6 h-6 text-orange-500" />
-                            Medications
-                        </h2>
-
-                        <div className="space-y-4">
-                            {medications.map((med) => (
-                                <MedicationItem
-                                    key={med.id}
-                                    name={med.name}
-                                    time={med.time}
-                                    taken={med.taken}
-                                    onToggle={() => toggleMedication(med.id)}
-                                />
-                            ))}
-                        </div>
-                    </section>
-
-                </div>
-
-                {/* RIGHT COLUMN */}
-                <div className="xl:col-span-5 flex flex-col gap-8">
-
-                    {/* QUICK CALL */}
-                    <section className="bg-white rounded-3xl p-8 shadow-sm">
-                        <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                            <Phone className="w-6 h-6 text-blue-500" />
-                            Quick Call
-                        </h2>
-
-                        <div className="flex gap-6">
-                            {["Sonia", "Dr. Smith", "Alex"].map((name, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => handleCall(name)}
-                                    className="flex flex-col items-center"
-                                >
-                                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-2xl font-bold">
-                                        {name.charAt(0)}
-                                    </div>
-                                    <span className="mt-2 font-bold">{name}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* STATUS CARD */}
-                    <div className="bg-white p-8 rounded-3xl shadow-sm">
-                        <h3 className="text-sm uppercase text-emerald-600 mb-2">
-                            Status
-                        </h3>
-                        <span className="text-4xl font-bold">
-                            {status}
-                        </span>
-                    </div>
-
-                </div>
-
-            </main>
-
-            {/* CAREGIVER SWITCH */}
-            <Link
-                to="/caretaker"
-                className="fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl"
-            >
-                Caregiver Mode
-            </Link>
-
-            {/* SOS BUTTON */}
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg">
-                <button
-                    onClick={handleSOS}
-                    className="w-full bg-red-600 text-white font-bold py-5 rounded-2xl"
-                >
-                    EMERGENCY SOS
-                </button>
+            {/* Background Animations changed to subtle greens */}
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
+                <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#AEB784] to-transparent"></div>
+                <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#AEB784] rounded-full blur-3xl opacity-40"></div>
+                <div className="absolute top-40 -left-20 w-72 h-72 bg-[#AEB784] rounded-full blur-3xl opacity-30"></div>
             </div>
 
+            <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:px-8 pb-32">
+
+                {/* HEADER */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#41431B]">
+                            {getGreeting()}, <span className="capitalize">{getUserName()}</span>
+                        </h1>
+                        <p className="text-[#AEB784] text-xl mt-3 font-semibold">
+                            Ready for a great day?
+                        </p>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="bg-white border-2 border-[#AEB784] hover:bg-[#AEB784] hover:text-white text-[#41431B] px-6 py-2 rounded-full shadow-sm font-semibold transition-colors"
+                    >
+                        Logout
+                    </button>
+                </header>
+
+                {/* MAIN GRID */}
+                <main className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-10">
+
+                    {/* LEFT COLUMN */}
+                    <div className="xl:col-span-7 flex flex-col gap-8">
+
+                        {/* VOICE CARD */}
+                        <div className="bg-white rounded-3xl p-10 shadow-lg flex flex-col items-center justify-center min-h-[500px]">
+
+                            <VoiceButton
+                                isRecording={isRecording}
+                                onClick={toggleRecording}
+                            />
+
+                            <div className="mt-8 text-center">
+                                {transcription ? (
+                                    <p className="text-2xl font-medium">
+                                        "{transcription}"
+                                    </p>
+                                ) : (
+                                    <p className="text-slate-400 text-xl">
+                                        Tap microphone to speak
+                                    </p>
+                                )}
+
+                                {audioURL && (
+                                    <audio
+                                        src={audioURL}
+                                        controls
+                                        className="mt-4"
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* RECENT HEALTH LOGS */}
+                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
+                                <Activity className="w-6 h-6 text-[#AEB784]" />
+                                Recent Health Logs
+                            </h2>
+
+                            <div className="space-y-4 max-h-60 overflow-y-auto">
+                                {healthLogs.length > 0 ? (
+                                    healthLogs.slice(0, 5).map((log) => (
+                                        <div
+                                            key={log._id}
+                                            className="p-4 bg-[#AEB784]/10 rounded-xl"
+                                        >
+                                            <p className="font-medium text-[#41431B]">
+                                                "{log.text}"
+                                            </p>
+                                            <p className="text-sm text-[#AEB784] mt-1 font-medium">
+                                                {new Date(log.timestamp).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-[#AEB784] text-center font-medium">
+                                        No recent logs found.
+                                    </p>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* MEDICATIONS */}
+                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
+                                <Sun className="w-6 h-6 text-[#AEB784]" />
+                                Medications
+                            </h2>
+
+                            <div className="space-y-4">
+                                {medications.map((med) => (
+                                    <MedicationItem
+                                        key={med.id}
+                                        name={med.name}
+                                        time={med.time}
+                                        taken={med.taken}
+                                        onToggle={() => toggleMedication(med.id)}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+
+                    </div>
+
+                    {/* RIGHT COLUMN */}
+                    <div className="xl:col-span-5 flex flex-col gap-8">
+
+                        {/* QUICK CALL */}
+                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
+                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-[#41431B]">
+                                <Phone className="w-6 h-6 text-[#AEB784]" />
+                                Quick Call
+                            </h2>
+
+                            <div className="flex gap-6">
+                                {["Sonia", "Dr. Smith", "Alex"].map((name, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => handleCall(name)}
+                                        className="flex flex-col items-center group"
+                                    >
+                                        <div className="w-20 h-20 bg-[#AEB784]/10 text-[#41431B] rounded-full flex items-center justify-center text-2xl font-bold group-hover:bg-[#AEB784] group-hover:text-white transition-colors">
+                                            {name.charAt(0)}
+                                        </div>
+                                        <span className="mt-2 font-bold text-[#41431B]">{name}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* STATUS CARD */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#AEB784]/20">
+                            <h3 className="text-sm uppercase text-[#AEB784] font-bold mb-2">
+                                Status
+                            </h3>
+                            <span className="text-4xl font-extrabold text-[#41431B]">
+                                {status}
+                            </span>
+                        </div>
+
+                    </div>
+
+                </main>
+
+                {/* SOS BUTTON */}
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg">
+                    <button
+                        onClick={handleSOS}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-5 rounded-3xl shadow-lg transition-transform hover:scale-105 active:scale-95"
+                    >
+                        EMERGENCY SOS
+                    </button>
+                </div>
+
+            </div>
         </div>
-    </div>
-);
+    );
 }

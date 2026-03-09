@@ -7,8 +7,8 @@ export default function MedicationItem({ name, time, taken, onToggle }) {
             className={`
         w-full flex items-center justify-between p-5 rounded-2xl border mb-3 transition-colors
         ${taken
-                    ? 'bg-[#388E3C]/10 border-[#388E3C]/30 opacity-60'
-                    : 'bg-white border-gray-100 hover:border-gray-300'
+                    ? 'bg-[#AEB784]/20 border-[#AEB784]/40 opacity-70'
+                    : 'bg-white border-gray-100 hover:border-[#AEB784]/50'
                 }
       `}
         >
@@ -20,7 +20,7 @@ export default function MedicationItem({ name, time, taken, onToggle }) {
             </div>
 
             {taken ? (
-                <CheckCircle className="w-10 h-10 text-[#388E3C]" />
+                <CheckCircle className="w-10 h-10 text-[#AEB784]" />
             ) : (
                 <Circle className="w-10 h-10 text-gray-300" />
             )}
