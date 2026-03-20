@@ -131,7 +131,8 @@ def create_elderly(current_user):
 
 
 @app.route('/api/transcribe', methods=['POST'])
-def transcribe():
+@token_required
+def transcribe(current_user):
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
 
@@ -152,7 +153,8 @@ def transcribe():
             logs_collection.insert_one({
                 "text": text,
                 "language": "ml-IN",
-                "timestamp": datetime.utcnow()
+                "timestamp": datetime.utcnow(),
+                "user_id": current_user['user_id']
             })
 
             return jsonify({'text': text})
@@ -169,11 +171,21 @@ def transcribe():
 
 
 @app.route('/api/logs', methods=['GET'])
-def get_logs():
+@token_required
+def get_logs(current_user):
     try:
-        # Fetch all logs, sorted by newest first
-        logs = list(logs_collection.find().sort("timestamp", -1))
-        
+        if current_user['role'] == 'elderly':
+            # Fetch logs for this elderly user
+            logs = list(logs_collection.find({"user_id": current_user['user_id']}).sort("timestamp", -1))
+        elif current_user['role'] == 'caregiver':
+            # Get elderly users tied to this caregiver
+            elderly_users = users_collection.find({"caregiver_id": current_user["user_id"]})
+            elderly_ids = [str(u["_id"]) for u in elderly_users]
+            # Fetch logs for these elderly users
+            logs = list(logs_collection.find({"user_id": {"$in": elderly_ids}}).sort("timestamp", -1))
+        else:
+            return jsonify({'error': 'Unauthorized role'}), 403
+            
         # Convert ObjectId to string for JSON serialization
         for log in logs:
             log["_id"] = str(log["_id"])
