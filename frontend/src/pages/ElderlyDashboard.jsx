@@ -7,7 +7,7 @@ import { Heart, Activity, AlertCircle, Phone, Sun, Cloud, CloudRain, Wind } from
 import { encodeWAV } from '../utils/wavEncoder';
 
 export default function ElderlyDashboard() {
-    const { logout, userEmail } = useContext(AuthContext);
+    const { logout, userEmail, token } = useContext(AuthContext);
     const [isRecording, setIsRecording] = useState(false);
     const [status, setStatus] = useState("Good");
     const [transcription, setTranscription] = useState('');
@@ -35,7 +35,11 @@ export default function ElderlyDashboard() {
     // Fetch Health Logs
     const fetchLogs = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:5000/api/logs');
+            const response = await fetch('http://127.0.0.1:5000/api/logs', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await response.json();
             setHealthLogs(data);
         } catch (error) {
@@ -120,6 +124,9 @@ export default function ElderlyDashboard() {
         try {
             const response = await fetch('http://127.0.0.1:5000/api/transcribe', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData,
             });
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Heart, Activity, AlertTriangle } from 'lucide-react';
+import { Heart, Activity, AlertTriangle, Download } from 'lucide-react';
 
 export default function CaretakerDashboard() {
     const { token, logout, userEmail } = useContext(AuthContext);
@@ -14,11 +14,15 @@ export default function CaretakerDashboard() {
     const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:5000/api/logs')
+        fetch('http://127.0.0.1:5000/api/logs', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
             .then(res => res.json())
             .then(data => setHealthLogs(data))
             .catch(err => console.error("Error fetching logs:", err));
-    }, []);
+    }, [token]);
 
     // Mock status data
     const currentStatus = {
@@ -42,10 +46,21 @@ export default function CaretakerDashboard() {
         return userEmail.split('@')[0];
     };
 
+    const downloadPDF = () => {
+        // Use the native browser print dialog which supports perfect PDF rendering 
+        // with complex scripts and allows "Save as PDF".
+        const originalTitle = document.title;
+        document.title = `EchoCare_Logs_${new Date().toLocaleDateString().replace(/\//g, '-')}`;
+        window.print();
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 100);
+    };
+
     return (
-        <div className="min-h-screen bg-[#F9F9F6] p-6 flex flex-col items-center font-sans text-[#41431B]">
+        <div className="min-h-screen bg-[#F9F9F6] p-6 flex flex-col items-center font-sans text-[#41431B] print:bg-white print:p-0">
             {/* Header */}
-            <header className="w-full max-w-4xl flex justify-between items-center mb-8 mt-4">
+            <header className="w-full max-w-4xl flex justify-between items-center mb-8 mt-4 print:hidden">
                 <div>
                     <h1 className="text-3xl font-bold text-[#41431B]">Caretaker Dashboard</h1>
                     <p className="text-[#AEB784] text-lg font-medium">Welcome, <span className="font-bold capitalize">{getCaregiverName()}</span></p>
@@ -61,9 +76,9 @@ export default function CaretakerDashboard() {
                 </div>
             </header>
 
-            <main className="w-full max-w-4xl space-y-6">
+            <main className="w-full max-w-4xl space-y-6 print:m-0 print:space-y-4">
                 {/* Status Overview Cards */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-4 print:hidden">
                     {/* Risk Level Card */}
                     <div className={`p-6 rounded-2xl border flex flex-col items-start justify-between h-32 ${getStatusColor(currentStatus.riskLevel)}`}>
                         <div className="flex items-center gap-2">
@@ -93,7 +108,7 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* --- Create Elderly Account Section --- */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:hidden">
                     <h2 className="text-lg font-bold text-[#41431B] mb-2">Manage Elderly Accounts</h2>
                     <p className="text-sm text-[#AEB784] mb-4 font-medium">Create login credentials for the elderly users you care for.</p>
 
@@ -169,19 +184,30 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* Detailed Status Message */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:hidden">
                     <h2 className="text-lg font-bold text-[#41431B] mb-2">Current Condition</h2>
                     <p className="text-[#41431B] opacity-80 font-medium">{currentStatus.statusMessage}</p>
                 </section>
 
                 {/* Health Records Table */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:border-none print:shadow-none print:p-0">
+                    <div className="flex items-center justify-between mb-6 print:hidden">
                         <h2 className="text-lg font-bold text-[#41431B]">Health Records</h2>
-                        <button className="text-sm text-[#AEB784] font-bold hover:underline">View All</button>
+                        <button 
+                            onClick={downloadPDF}
+                            className="flex items-center gap-1 text-sm bg-[#AEB784]/10 text-[#AEB784] hover:bg-[#AEB784]/20 px-3 py-1.5 rounded-lg font-bold transition-colors"
+                        >
+                            <Download className="w-4 h-4" /> Download PDF
+                        </button>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white">
+                        {/* We add a title inside the container specifically for the PDF download */}
+                        <div className="hidden print:block mb-4">
+                            <h1 className="text-2xl font-bold text-[#41431B]">EchoCare Health Logs</h1>
+                            <p className="text-sm text-[#AEB784]">Generated on: {new Date().toLocaleString()}</p>
+                        </div>
+                        
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="text-sm text-[#AEB784] border-b border-[#AEB784]/20">
@@ -218,7 +244,7 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* Progress/Adherence Tracking Placeholder */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm mb-8">
+                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm mb-8 print:hidden">
                     <h2 className="text-lg font-bold text-[#41431B] mb-4">Weekly Adherence</h2>
                     <div className="flex items-center gap-4">
                         <div className="flex-1 h-3 bg-[#F9F9F6] rounded-full overflow-hidden border border-[#AEB784]/20">
