@@ -1,24 +1,16 @@
 import { useState, useRef, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import VoiceButton from '../components/VoiceButton';
-import MedicationItem from '../components/MedicationItem';
-import { Heart, Activity, AlertCircle, Phone, Sun, Cloud, CloudRain, Wind } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { encodeWAV } from '../utils/wavEncoder';
 
 export default function ElderlyDashboard() {
     const { logout, userEmail, token } = useContext(AuthContext);
     const [isRecording, setIsRecording] = useState(false);
-    const [status, setStatus] = useState("Good");
     const [transcription, setTranscription] = useState('');
     const [healthLogs, setHealthLogs] = useState([]);
     const [audioURL, setAudioURL] = useState('');
     const [currentTime, setCurrentTime] = useState(new Date());
-    const [medications, setMedications] = useState([
-        { id: 1, name: "Morning Pill", time: "8:00 AM", taken: false },
-        { id: 2, name: "Vitamin D", time: "10:00 AM", taken: false },
-        { id: 3, name: "Heart Meds", time: "2:00 PM", taken: false },
-    ]);
 
     // Audio Refs
     const audioContextRef = useRef(null);
@@ -133,7 +125,6 @@ export default function ElderlyDashboard() {
             const data = await response.json();
             if (response.ok) {
                 setTranscription(data.text);
-                setStatus("Monitoring");
             } else {
                 console.error("Transcription error:", data.error);
                 setTranscription("Error: " + (data.error || "Unknown error"));
@@ -152,23 +143,9 @@ export default function ElderlyDashboard() {
         }
     };
 
-    const toggleMedication = (id) => {
-        setMedications(medications.map(med =>
-            med.id === id ? { ...med, taken: !med.taken } : med
-        ));
-    };
-
     const handleSOS = () => {
         // In a real app, this would trigger a call/SMS API
         alert("🆘 EMERGENCY ALERT SENT TO CAREGIVERS & DR. SMITH");
-    };
-
-    const handleCall = (name) => {
-        // In a real app, use tel: protocol or specific API
-        const confirmCall = window.confirm(`Call ${name}?`);
-        if (confirmCall) {
-            window.location.href = "tel:555-123-4567";
-        }
     };
 
     // Helper for greeting
@@ -215,131 +192,67 @@ export default function ElderlyDashboard() {
                     </button>
                 </header>
 
-                {/* MAIN GRID */}
-                <main className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-10">
+                {/* MAIN CONTENT */}
+                <main className="flex flex-col gap-8 max-w-4xl mx-auto">
 
-                    {/* LEFT COLUMN */}
-                    <div className="xl:col-span-7 flex flex-col gap-8">
+                    {/* VOICE CARD */}
+                    <div className="bg-white rounded-3xl p-10 shadow-lg flex flex-col items-center justify-center min-h-[500px]">
 
-                        {/* VOICE CARD */}
-                        <div className="bg-white rounded-3xl p-10 shadow-lg flex flex-col items-center justify-center min-h-[500px]">
+                        <VoiceButton
+                            isRecording={isRecording}
+                            onClick={toggleRecording}
+                        />
 
-                            <VoiceButton
-                                isRecording={isRecording}
-                                onClick={toggleRecording}
-                            />
+                        <div className="mt-8 text-center">
+                            {transcription ? (
+                                <p className="text-2xl font-medium">
+                                    "{transcription}"
+                                </p>
+                            ) : (
+                                <p className="text-slate-400 text-xl">
+                                    Tap microphone to speak
+                                </p>
+                            )}
 
-                            <div className="mt-8 text-center">
-                                {transcription ? (
-                                    <p className="text-2xl font-medium">
-                                        "{transcription}"
-                                    </p>
-                                ) : (
-                                    <p className="text-slate-400 text-xl">
-                                        Tap microphone to speak
-                                    </p>
-                                )}
-
-                                {audioURL && (
-                                    <audio
-                                        src={audioURL}
-                                        controls
-                                        className="mt-4"
-                                    />
-                                )}
-                            </div>
+                            {audioURL && (
+                                <audio
+                                    src={audioURL}
+                                    controls
+                                    className="mt-4"
+                                />
+                            )}
                         </div>
-
-                        {/* RECENT HEALTH LOGS */}
-                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
-                                <Activity className="w-6 h-6 text-[#AEB784]" />
-                                Recent Health Logs
-                            </h2>
-
-                            <div className="space-y-4 max-h-60 overflow-y-auto">
-                                {healthLogs.length > 0 ? (
-                                    healthLogs.slice(0, 5).map((log) => (
-                                        <div
-                                            key={log._id}
-                                            className="p-4 bg-[#AEB784]/10 rounded-xl"
-                                        >
-                                            <p className="font-medium text-[#41431B]">
-                                                "{log.text}"
-                                            </p>
-                                            <p className="text-sm text-[#AEB784] mt-1 font-medium">
-                                                {new Date(log.timestamp).toLocaleString()}
-                                            </p>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-[#AEB784] text-center font-medium">
-                                        No recent logs found.
-                                    </p>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* MEDICATIONS */}
-                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
-                                <Sun className="w-6 h-6 text-[#AEB784]" />
-                                Medications
-                            </h2>
-
-                            <div className="space-y-4">
-                                {medications.map((med) => (
-                                    <MedicationItem
-                                        key={med.id}
-                                        name={med.name}
-                                        time={med.time}
-                                        taken={med.taken}
-                                        onToggle={() => toggleMedication(med.id)}
-                                    />
-                                ))}
-                            </div>
-                        </section>
-
                     </div>
 
-                    {/* RIGHT COLUMN */}
-                    <div className="xl:col-span-5 flex flex-col gap-8">
+                    {/* RECENT HEALTH LOGS */}
+                    <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
+                            <Activity className="w-6 h-6 text-[#AEB784]" />
+                            Recent Health Logs
+                        </h2>
 
-                        {/* QUICK CALL */}
-                        <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
-                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-[#41431B]">
-                                <Phone className="w-6 h-6 text-[#AEB784]" />
-                                Quick Call
-                            </h2>
-
-                            <div className="flex gap-6">
-                                {["Sonia", "Dr. Smith", "Alex"].map((name, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => handleCall(name)}
-                                        className="flex flex-col items-center group"
+                        <div className="space-y-4 max-h-60 overflow-y-auto">
+                            {healthLogs.length > 0 ? (
+                                healthLogs.slice(0, 5).map((log) => (
+                                    <div
+                                        key={log._id}
+                                        className="p-4 bg-[#AEB784]/10 rounded-xl"
                                     >
-                                        <div className="w-20 h-20 bg-[#AEB784]/10 text-[#41431B] rounded-full flex items-center justify-center text-2xl font-bold group-hover:bg-[#AEB784] group-hover:text-white transition-colors">
-                                            {name.charAt(0)}
-                                        </div>
-                                        <span className="mt-2 font-bold text-[#41431B]">{name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-
-                        {/* STATUS CARD */}
-                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#AEB784]/20">
-                            <h3 className="text-sm uppercase text-[#AEB784] font-bold mb-2">
-                                Status
-                            </h3>
-                            <span className="text-4xl font-extrabold text-[#41431B]">
-                                {status}
-                            </span>
+                                        <p className="font-medium text-[#41431B]">
+                                            "{log.text}"
+                                        </p>
+                                        <p className="text-sm text-[#AEB784] mt-1 font-medium">
+                                            {new Date(log.timestamp).toLocaleString()}
+                                        </p>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-[#AEB784] text-center font-medium">
+                                    No recent logs found.
+                                </p>
+                            )}
                         </div>
-
-                    </div>
-
+                    </section>
                 </main>
 
                 {/* SOS BUTTON */}

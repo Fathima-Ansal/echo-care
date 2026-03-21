@@ -10,6 +10,7 @@ export default function CaretakerDashboard() {
     // State for creating elderly account
     const [elderlyEmail, setElderlyEmail] = useState('');
     const [elderlyPassword, setElderlyPassword] = useState('');
+    const [elderlyLanguage, setElderlyLanguage] = useState('ml-IN');
     const [createMsg, setCreateMsg] = useState({ text: '', type: '' });
     const [isCreating, setIsCreating] = useState(false);
 
@@ -132,7 +133,11 @@ export default function CaretakerDashboard() {
                                         'Content-Type': 'application/json',
                                         'Authorization': `Bearer ${token}`
                                     },
-                                    body: JSON.stringify({ email: elderlyEmail, password: elderlyPassword }),
+                                    body: JSON.stringify({ 
+                                        email: elderlyEmail, 
+                                        password: elderlyPassword,
+                                        preferred_language: elderlyLanguage
+                                    }),
                                 });
 
                                 const data = await response.json();
@@ -172,6 +177,35 @@ export default function CaretakerDashboard() {
                                 className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
                                 placeholder="Create a password"
                             />
+                        </div>
+                        <div className="flex-1 w-full">
+                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Language</label>
+                            <select
+                                value={elderlyLanguage}
+                                onChange={(e) => setElderlyLanguage(e.target.value)}
+                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                            >
+                                <option value="ml-IN">Malayalam (മലയാളം)</option>
+                                <option value="en-US">English (US)</option>
+                                <option value="en-IN">English (India)</option>
+                                <option value="hi-IN">Hindi (हिन्दी)</option>
+                                <option value="ta-IN">Tamil (தமிழ்)</option>
+                                <option value="te-IN">Telugu (తెలుగు)</option>
+                                <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                                <option value="mr-IN">Marathi (मराठी)</option>
+                                <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+                                <option value="bn-IN">Bengali (বাংলা)</option>
+                                <option value="es-ES">Spanish (Español)</option>
+                                <option value="fr-FR">French (Français)</option>
+                                <option value="de-DE">German (Deutsch)</option>
+                                <option value="it-IT">Italian (Italiano)</option>
+                                <option value="pt-BR">Portuguese (Português)</option>
+                                <option value="ru-RU">Russian (Русский)</option>
+                                <option value="ar-SA">Arabic (العربية)</option>
+                                <option value="zh-CN">Chinese (中文)</option>
+                                <option value="ja-JP">Japanese (日本語)</option>
+                                <option value="ko-KR">Korean (한국어)</option>
+                            </select>
                         </div>
                         <button
                             type="submit"

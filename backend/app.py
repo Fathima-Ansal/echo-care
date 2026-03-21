@@ -87,11 +87,16 @@ def login():
     if not user or not bcrypt.checkpw(data['password'].encode('utf-8'), user['password'].encode('utf-8')):
         return jsonify({'error': 'Invalid email or password'}), 401
         
-    token = jwt.encode({
+    token_payload = {
         'user_id': str(user['_id']),
         'role': user['role'],
         'exp': datetime.utcnow() + timedelta(hours=24)
-    }, app.config['SECRET_KEY'], algorithm="HS256")
+    }
+    
+    if 'preferred_language' in user:
+        token_payload['preferred_language'] = user['preferred_language']
+        
+    token = jwt.encode(token_payload, app.config['SECRET_KEY'], algorithm="HS256")
     
     return jsonify({
         'token': token,
@@ -112,6 +117,7 @@ def create_elderly(current_user):
 
     email = data['email']
     password = data['password']
+    preferred_language = data.get('preferred_language', 'ml-IN')
 
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'User with this email/username already exists'}), 409
@@ -122,6 +128,7 @@ def create_elderly(current_user):
         'email': email,
         'password': hashed_password.decode('utf-8'),
         'role': 'elderly',
+        'preferred_language': preferred_language,
         'caregiver_id': current_user['user_id'],
         'created_at': datetime.utcnow()
     }
@@ -145,14 +152,16 @@ def transcribe(current_user):
     audio_file.save(filepath)
 
     try:
-        # Perform transcription
-        text = transcribe_audio(filepath, language='ml-IN')
+        user_language = current_user.get('preferred_language', 'ml-IN')
+        
+        # Perform transcription with Google Web Speech API
+        text = transcribe_audio(filepath, language=user_language)
 
         if text:
             # 🔥 Save to MongoDB
             logs_collection.insert_one({
                 "text": text,
-                "language": "ml-IN",
+                "language": user_language,
                 "timestamp": datetime.utcnow(),
                 "user_id": current_user['user_id']
             })
@@ -201,4 +210,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, use_reloader=False, port=5000)

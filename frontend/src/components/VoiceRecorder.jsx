@@ -5,6 +5,7 @@ const VoiceRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState('');
   const [audioURL, setAudioURL] = useState('');
+  const [language, setLanguage] = useState('ml-IN');
 
   const audioContextRef = useRef(null);
   const processorRef = useRef(null);
@@ -77,6 +78,7 @@ const VoiceRecorder = () => {
   const sendToBackend = async (audioBlob) => {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.wav');
+    formData.append('language', language);
 
     setTranscription("Transcribing...");
 
@@ -102,8 +104,25 @@ const VoiceRecorder = () => {
   return (
     <div className="w-full max-w-lg mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/50">
       <h2 className="text-3xl font-bold mb-8 text-center text-slate-700 tracking-tight">
-        Malayalam Voice Diary
+        Voice Diary
       </h2>
+
+      <div className="mb-6 flex justify-center">
+        <select
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+          className="bg-white border text-center border-slate-300 text-slate-700 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          disabled={isRecording}
+        >
+          <option value="ml-IN">Malayalam (മലയാളം)</option>
+          <option value="en-US">English (US)</option>
+          <option value="en-IN">English (India)</option>
+          <option value="hi-IN">Hindi (हिन्दी)</option>
+          <option value="ta-IN">Tamil (தமிழ்)</option>
+          <option value="te-IN">Telugu (తెలుగు)</option>
+          <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+        </select>
+      </div>
 
       <div className="flex flex-col items-center justify-center mb-8">
         <button
