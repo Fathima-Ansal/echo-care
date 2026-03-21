@@ -193,9 +193,9 @@ Your task is to triage their health issue by gathering information about:
 STRICT OUTPUT RULES:
 - IMPORTANT: Review the Conversation History below. Ask ONLY ONE question at a time to gather the missing information. DO NOT repeat questions.
 - MAXIMUM 3 QUESTIONS / STOPPING CONDITION: Once you have gathered all 3 pieces of information OR if you have already asked 3 questions, you MUST stop asking questions. You MUST end the conversation by saying exactly this sentence (translated to the user's language): "If the pain is increasing I suggest you to go to doctor." Do not add anything else after this sentence.
-- You MUST reply in the EXACT SAME LANGUAGE as the user! If the user speaks Malayalam, reply natively in Malayalam script. If English, reply in English.
+- You MUST reply in the EXACT SAME LANGUAGE as the user! (e.g., if the user speaks Hindi, reply in Hindi script; if Malayalam, reply in Malayalam script; etc.).
 - OUTPUT ONLY THE DIRECT CONVERSATIONAL RESPONSE.
-- DO NOT output any English translations, internal thoughts, explanations, or commentary. Never output "Is this translated as.." or "The next question is..".
+- DO NOT output any translations, internal thoughts, explanations, or commentary. Never output "Is this translated as.." or "The next question is..".
 - Keep the reply strictly to 1 or 2 sentences max.
 
 Conversation History:
@@ -221,7 +221,7 @@ Final Native Response:"""
             if reply_text and not reply_text.startswith("Sorry,"):
                 try:
                     # Determine tts language
-                    tts_lang = "ml" if "ml" in user_language.lower() else "en"
+                    tts_lang = user_language.split('-')[0].lower()
                     tts = gTTS(text=reply_text, lang=tts_lang)
                     fp = io.BytesIO()
                     tts.write_to_fp(fp)
