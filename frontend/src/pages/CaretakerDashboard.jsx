@@ -260,9 +260,20 @@ export default function CaretakerDashboard() {
                                                 <span className="text-xs text-[#AEB784]">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </td>
                                             <td className="py-4 text-[#41431B] font-medium text-sm">
-                                                <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] font-bold">
-                                                    Voice Log
-                                                </span>
+                                                <div className="flex flex-col gap-2 items-start">
+                                                    <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] font-bold">
+                                                        Voice Log
+                                                    </span>
+                                                    {log.sentiment && (
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                            log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
+                                                            log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-200 text-gray-700'
+                                                        }`}>
+                                                            {log.sentiment}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-4 text-[#41431B] opacity-80 text-sm max-w-xs truncate" title={log.text}>"{log.text}"</td>
                                         </tr>

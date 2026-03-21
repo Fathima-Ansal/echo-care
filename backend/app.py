@@ -194,28 +194,42 @@ STRICT OUTPUT RULES:
 - IMPORTANT: Review the Conversation History below. Ask ONLY ONE question at a time to gather the missing information. DO NOT repeat questions.
 - MAXIMUM 3 QUESTIONS / STOPPING CONDITION: Once you have gathered all 3 pieces of information OR if you have already asked 3 questions, you MUST stop asking questions. You MUST end the conversation by saying exactly this sentence (translated to the user's language): "If the pain is increasing I suggest you to go to doctor." Do not add anything else after this sentence.
 - You MUST reply in the EXACT SAME LANGUAGE as the user! (e.g., if the user speaks Hindi, reply in Hindi script; if Malayalam, reply in Malayalam script; etc.).
-- OUTPUT ONLY THE DIRECT CONVERSATIONAL RESPONSE.
-- DO NOT output any translations, internal thoughts, explanations, or commentary. Never output "Is this translated as.." or "The next question is..".
-- Keep the reply strictly to 1 or 2 sentences max.
+
+CRITICAL JSON OUTPUT REQUIRED:
+You must output a strictly valid JSON object. Do NOT output markdown, explanations, or plain text outside the JSON.
+The JSON must have EXACTLY these two keys:
+1. "reply": Your direct conversational response (in the exact same language as the user), limited to 1 or 2 sentences max.
+2. "sentiment": Analyze the "Current User message" and provide exactly one of these words: "Positive", "Neutral", or "Negative".
 
 Conversation History:
 {history_text}
 
 Current User message: "{text}"
-Final Native Response:"""
+Final JSON Output:"""
                     response = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
                         messages=[
-                            {"role": "system", "content": "You are a brief, empathetic triage companion."},
+                            {"role": "system", "content": "You are a brief, empathetic triage companion. You only respond in JSON."},
                             {"role": "user", "content": prompt}
-                        ]
+                        ],
+                        response_format={"type": "json_object"}
                     )
-                    reply_text = response.choices[0].message.content.strip()
+                    import json
+                    try:
+                        reply_json = json.loads(response.choices[0].message.content.strip())
+                        reply_text = reply_json.get("reply", "")
+                        sentiment_result = reply_json.get("sentiment", "Neutral")
+                    except Exception as e:
+                        print(f"Error parsing JSON from Groq: {e}")
+                        reply_text = response.choices[0].message.content.strip()
+                        sentiment_result = "Neutral"
                 except Exception as e:
                     print(f"Error generating AI reply: {e}")
                     reply_text = f"Sorry, I am having trouble connecting to my companion core. (Debug: {str(e)})"
+                    sentiment_result = "Neutral"
             else:
                 reply_text = "Please add a GROQ_API_KEY to the backend .env file so I can reply properly."
+                sentiment_result = "Neutral"
 
             audio_b64 = None
             if reply_text and not reply_text.startswith("Sorry,"):
@@ -230,10 +244,46 @@ Final Native Response:"""
                 except Exception as e:
                     print(f"Error generating TTS audio: {e}")
 
+            # 🧠 Hume AI Acoustic Emotion Recognition
+            hume_api_key = os.environ.get("HUME_API_KEY")
+            if hume_api_key and "your_key_here" not in hume_api_key:
+                try:
+                    from hume import HumeBatchClient
+                    from hume.models.config import ProsodyConfig
+                    print("Sending audio to Hume AI for prosody detection...")
+                    hume_client = HumeBatchClient(hume_api_key)
+                    job = hume_client.submit_job([], [ProsodyConfig()], files=[filepath])
+                    job.await_complete()
+                    predictions = job.get_predictions()
+                    
+                    if predictions and len(predictions) > 0:
+                        try:
+                            emotions_list = predictions[0]['results']['predictions'][0]['models']['prosody']['grouped_predictions'][0]['predictions'][0]['emotions']
+                            emotions_list.sort(key=lambda x: x['score'], reverse=True)
+                            top_emotion = emotions_list[0]['name']
+                            top_score = emotions_list[0]['score']
+                            print(f"Hume Top Acoustic Emotion: {top_emotion} ({top_score:.2f})")
+                            
+                            negative_markers = ["Pain", "Distress", "Sadness", "Anxiety", "Fear", "Disappointment", "Anger", "Horror", "Tiredness"]
+                            positive_markers = ["Joy", "Amusement", "Excitement", "Triumph", "Relief", "Awe", "Admiration"]
+                            
+                            if top_emotion in negative_markers and top_score > 0.3:
+                                sentiment_result = "Negative"
+                                print("--> Acoustic Overridden: Negative")
+                            elif top_emotion in positive_markers and top_score > 0.4:
+                                sentiment_result = "Positive"
+                                print("--> Acoustic Overridden: Positive")
+                        except Exception as parse_e:
+                            print(f"Error parsing Hume results: {parse_e}")
+                except Exception as e:
+                    print(f"Hume AI processing failed: {e}")
+
+
             # 🔥 Save to MongoDB
             log_entry = {
                 "text": text,
                 "reply": reply_text,
+                "sentiment": sentiment_result,
                 "audio_b64": audio_b64, # Save audio if needed, or omit to save DB space. Omiting to save space.
                 "language": user_language,
                 "timestamp": datetime.now(timezone.utc),
@@ -241,7 +291,7 @@ Final Native Response:"""
             }
             logs_collection.insert_one(log_entry)
 
-            return jsonify({'text': text, 'reply': reply_text, 'audio_b64': audio_b64})
+            return jsonify({'text': text, 'reply': reply_text, 'sentiment': sentiment_result, 'audio_b64': audio_b64})
         else:
             return jsonify({'error': 'Could not transcribe audio'}), 500
 

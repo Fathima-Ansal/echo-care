@@ -21,7 +21,6 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
   return children;
 };
-import './App.css';
 
 function App() {
   return (

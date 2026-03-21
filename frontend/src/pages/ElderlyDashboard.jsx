@@ -245,9 +245,22 @@ export default function ElderlyDashboard() {
                                         key={log._id}
                                         className="p-4 bg-[#AEB784]/10 rounded-xl"
                                     >
-                                        <p className="font-medium text-[#41431B]">
-                                            <span className="font-bold opacity-75">You:</span> "{log.text}"
-                                        </p>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <p className="font-medium text-[#41431B]">
+                                                <span className="font-bold opacity-75">You:</span> "{log.text}"
+                                            </p>
+                                            {log.sentiment && (
+                                                <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
+                                                    log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
+                                                    log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
+                                                    'bg-gray-200 text-gray-700'
+                                                }`}>
+                                                    {log.sentiment === 'Positive' ? '😊 Positive' :
+                                                     log.sentiment === 'Negative' ? '😔 Negative' :
+                                                     '😐 Neutral'}
+                                                </span>
+                                            )}
+                                        </div>
                                         {log.reply && (
                                             <div className="font-medium text-[#41431B] mt-2 bg-white/50 p-3 rounded-lg border border-[#AEB784]/20 shadow-sm flex items-start justify-between gap-4">
                                                 <p>
