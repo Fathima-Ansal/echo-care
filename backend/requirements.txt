@@ -5,3 +5,6 @@ pydub
 bcrypt
 PyJWT
 pymongo
+groq
+python-dotenv
+gTTS

@@ -125,6 +125,13 @@ export default function ElderlyDashboard() {
             const data = await response.json();
             if (response.ok) {
                 setTranscription(data.text);
+                
+                // If AI Companion replied with audio, play it automatically
+                if (data.audio_b64) {
+                    const audioSrc = "data:audio/mp3;base64," + data.audio_b64;
+                    const audioObj = new Audio(audioSrc);
+                    audioObj.play().catch(e => console.error("Auto-play blocked:", e));
+                }
             } else {
                 console.error("Transcription error:", data.error);
                 setTranscription("Error: " + (data.error || "Unknown error"));
@@ -239,9 +246,29 @@ export default function ElderlyDashboard() {
                                         className="p-4 bg-[#AEB784]/10 rounded-xl"
                                     >
                                         <p className="font-medium text-[#41431B]">
-                                            "{log.text}"
+                                            <span className="font-bold opacity-75">You:</span> "{log.text}"
                                         </p>
-                                        <p className="text-sm text-[#AEB784] mt-1 font-medium">
+                                        {log.reply && (
+                                            <div className="font-medium text-[#41431B] mt-2 bg-white/50 p-3 rounded-lg border border-[#AEB784]/20 shadow-sm flex items-start justify-between gap-4">
+                                                <p>
+                                                    <span className="font-bold text-blue-800">Companion:</span> {log.reply}
+                                                </p>
+                                                {log.audio_b64 && (
+                                                    <button
+                                                        onClick={() => {
+                                                            console.log("Playing base64 audio manually");
+                                                            const audioObj = new Audio("data:audio/mp3;base64," + log.audio_b64);
+                                                            audioObj.play().catch(e => console.error("Manual play error:", e));
+                                                        }}
+                                                        className="p-3 bg-blue-100/80 hover:bg-blue-200 rounded-full flex-shrink-0 shadow-sm transition-all"
+                                                        title="Play audio out loud"
+                                                    >
+                                                        🔊
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        <p className="text-sm text-[#AEB784] mt-2 font-medium">
                                             {new Date(log.timestamp).toLocaleString()}
                                         </p>
                                     </div>

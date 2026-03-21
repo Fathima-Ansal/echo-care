@@ -1,6 +1,5 @@
 import speech_recognition as sr
 from pydub import AudioSegment
-import io
 import os
 
 def transcribe_audio(audio_file_path, language='ml-IN'):

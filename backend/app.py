@@ -2,12 +2,22 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 import bcrypt
 import jwt
 from functools import wraps
+from dotenv import load_dotenv
+from groq import Groq
 from transcription import transcribe_audio
+from gtts import gTTS
+import base64
+import io
+
+# Load environment variables
+load_dotenv()
+
+# We configure client below dynamically or fail gracefully
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -90,7 +100,7 @@ def login():
     token_payload = {
         'user_id': str(user['_id']),
         'role': user['role'],
-        'exp': datetime.utcnow() + timedelta(hours=24)
+        'exp': datetime.now(timezone.utc) + timedelta(hours=24)
     }
     
     if 'preferred_language' in user:
@@ -130,7 +140,7 @@ def create_elderly(current_user):
         'role': 'elderly',
         'preferred_language': preferred_language,
         'caregiver_id': current_user['user_id'],
-        'created_at': datetime.utcnow()
+        'created_at': datetime.now(timezone.utc)
     }
 
     users_collection.insert_one(new_user)
@@ -158,15 +168,80 @@ def transcribe(current_user):
         text = transcribe_audio(filepath, language=user_language)
 
         if text:
-            # 🔥 Save to MongoDB
-            logs_collection.insert_one({
-                "text": text,
-                "language": user_language,
-                "timestamp": datetime.utcnow(),
-                "user_id": current_user['user_id']
-            })
+            # Generate intelligent conversational triage reply using Groq
+            reply_text = None
+            api_key = os.environ.get("GROQ_API_KEY")
+            if api_key and api_key != "your_groq_api_key_here":
+                try:
+                    # Fetch short conversation history to prevent repeating questions
+                    recent_logs = list(logs_collection.find({"user_id": current_user['user_id']}).sort("timestamp", -1).limit(4))
+                    recent_logs.reverse() # Chronological order
+                    history_text = ""
+                    for lg in recent_logs:
+                        history_text += f"User: {lg.get('text', '')}\n"
+                        if lg.get('reply'):
+                            history_text += f"Companion: {lg.get('reply', '')}\n"
 
-            return jsonify({'text': text})
+                    client = Groq(api_key=api_key)
+                    prompt = f"""
+You are a caring AI health companion for elderly users. 
+Your task is to triage their health issue by gathering information about:
+1. Duration of pain
+2. Severity of pain
+3. If they have taken any medicines
+
+STRICT OUTPUT RULES:
+- IMPORTANT: Review the Conversation History below. Ask ONLY ONE question at a time to gather the missing information. DO NOT repeat questions.
+- MAXIMUM 3 QUESTIONS / STOPPING CONDITION: Once you have gathered all 3 pieces of information OR if you have already asked 3 questions, you MUST stop asking questions. You MUST end the conversation by saying exactly this sentence (translated to the user's language): "If the pain is increasing I suggest you to go to doctor." Do not add anything else after this sentence.
+- You MUST reply in the EXACT SAME LANGUAGE as the user! If the user speaks Malayalam, reply natively in Malayalam script. If English, reply in English.
+- OUTPUT ONLY THE DIRECT CONVERSATIONAL RESPONSE.
+- DO NOT output any English translations, internal thoughts, explanations, or commentary. Never output "Is this translated as.." or "The next question is..".
+- Keep the reply strictly to 1 or 2 sentences max.
+
+Conversation History:
+{history_text}
+
+Current User message: "{text}"
+Final Native Response:"""
+                    response = client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=[
+                            {"role": "system", "content": "You are a brief, empathetic triage companion."},
+                            {"role": "user", "content": prompt}
+                        ]
+                    )
+                    reply_text = response.choices[0].message.content.strip()
+                except Exception as e:
+                    print(f"Error generating AI reply: {e}")
+                    reply_text = f"Sorry, I am having trouble connecting to my companion core. (Debug: {str(e)})"
+            else:
+                reply_text = "Please add a GROQ_API_KEY to the backend .env file so I can reply properly."
+
+            audio_b64 = None
+            if reply_text and not reply_text.startswith("Sorry,"):
+                try:
+                    # Determine tts language
+                    tts_lang = "ml" if "ml" in user_language.lower() else "en"
+                    tts = gTTS(text=reply_text, lang=tts_lang)
+                    fp = io.BytesIO()
+                    tts.write_to_fp(fp)
+                    fp.seek(0)
+                    audio_b64 = base64.b64encode(fp.read()).decode('utf-8')
+                except Exception as e:
+                    print(f"Error generating TTS audio: {e}")
+
+            # 🔥 Save to MongoDB
+            log_entry = {
+                "text": text,
+                "reply": reply_text,
+                "audio_b64": audio_b64, # Save audio if needed, or omit to save DB space. Omiting to save space.
+                "language": user_language,
+                "timestamp": datetime.now(timezone.utc),
+                "user_id": current_user['user_id']
+            }
+            logs_collection.insert_one(log_entry)
+
+            return jsonify({'text': text, 'reply': reply_text, 'audio_b64': audio_b64})
         else:
             return jsonify({'error': 'Could not transcribe audio'}), 500
 
