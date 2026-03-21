@@ -18,12 +18,7 @@ def transcribe_audio(audio_file_path, language='ml-IN'):
     
     converted_path = None
     
-    # If the file is already a WAV file (which we expect from frontend now), we can process it directly.
-    # We only use pydub if it is NOT a wav file.
-    
     if not audio_file_path.endswith('.wav'):
-        # Only try to convert if it's NOT a wav file.
-        # This path might still fail if ffmpeg is missing, but our frontend now sends WAV.
         try:
             audio = AudioSegment.from_file(audio_file_path)
             wav_path = audio_file_path + ".wav"

@@ -4,3 +4,4 @@ SpeechRecognition
 pydub
 bcrypt
 PyJWT
+pymongo
