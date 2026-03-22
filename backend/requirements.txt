@@ -8,3 +8,4 @@ pymongo
 groq
 python-dotenv
 gTTS
+hume

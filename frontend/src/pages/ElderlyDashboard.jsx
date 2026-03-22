@@ -179,15 +179,15 @@ export default function ElderlyDashboard() {
                 <div className="absolute top-40 -left-20 w-72 h-72 bg-[#AEB784] rounded-full blur-3xl opacity-30"></div>
             </div>
 
-            <div className="relative z-10 max-w-7xl mx-auto px-4 py-8 md:px-8 pb-32">
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8 pb-32">
 
                 {/* HEADER */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 md:mb-14 gap-8">
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#41431B]">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#41431B] leading-tight">
                             {getGreeting()}, <span className="capitalize">{getUserName()}</span>
                         </h1>
-                        <p className="text-[#AEB784] text-xl mt-3 font-semibold">
+                        <p className="text-[#AEB784] text-lg md:text-xl mt-3 font-semibold">
                             Ready for a great day?
                         </p>
                     </div>
@@ -200,10 +200,9 @@ export default function ElderlyDashboard() {
                 </header>
 
                 {/* MAIN CONTENT */}
-                <main className="flex flex-col gap-8 max-w-4xl mx-auto">
-
+                <main className="flex flex-col gap-8 w-full max-w-4xl mx-auto">
                     {/* VOICE CARD */}
-                    <div className="bg-white rounded-3xl p-10 shadow-lg flex flex-col items-center justify-center min-h-[500px]">
+                    <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-lg flex flex-col items-center justify-center min-h-[450px] md:min-h-[500px]">
 
                         <VoiceButton
                             isRecording={isRecording}
@@ -245,9 +244,22 @@ export default function ElderlyDashboard() {
                                         key={log._id}
                                         className="p-4 bg-[#AEB784]/10 rounded-xl"
                                     >
-                                        <p className="font-medium text-[#41431B]">
-                                            <span className="font-bold opacity-75">You:</span> "{log.text}"
-                                        </p>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <p className="font-medium text-[#41431B]">
+                                                <span className="font-bold opacity-75">You:</span> "{log.text}"
+                                            </p>
+                                            {log.sentiment && (
+                                                <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
+                                                    log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
+                                                    log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
+                                                    'bg-gray-200 text-gray-700'
+                                                }`}>
+                                                    {log.sentiment === 'Positive' ? '😊 Positive' :
+                                                     log.sentiment === 'Negative' ? '😔 Negative' :
+                                                     '😐 Neutral'}
+                                                </span>
+                                            )}
+                                        </div>
                                         {log.reply && (
                                             <div className="font-medium text-[#41431B] mt-2 bg-white/50 p-3 rounded-lg border border-[#AEB784]/20 shadow-sm flex items-start justify-between gap-4">
                                                 <p>
