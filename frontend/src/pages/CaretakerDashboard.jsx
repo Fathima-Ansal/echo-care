@@ -3,6 +3,28 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Heart, Activity, AlertTriangle, Download, User, X, Bell, Info } from 'lucide-react';
 
+const playAlertSound = () => {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+        osc.type = 'sine';
+        // A shrill, urgent beep
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.5);
+        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+        console.error("Audio play failed", e);
+    }
+};
+
 export default function CaretakerDashboard() {
     const { token, logout, userEmail, userRole } = useContext(AuthContext);
     const [healthLogs, setHealthLogs] = useState([]);
@@ -10,6 +32,7 @@ export default function CaretakerDashboard() {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [lastAlertId, setLastAlertId] = useState(null);
+    const [criticalAlerts, setCriticalAlerts] = useState([]);
 
     // State for creating elderly account
     const [elderlyEmail, setElderlyEmail] = useState('');
@@ -45,6 +68,17 @@ export default function CaretakerDashboard() {
                             const existingIds = new Set(prev.map(n => n.id));
                             const uniqueNew = newNotifications.filter(n => !existingIds.has(n.id));
                             if (uniqueNew.length === 0) return prev;
+                            
+                            // Trigger critical alerts for newly fetched negative logs
+                            setCriticalAlerts(current => {
+                                const newAlerts = uniqueNew.filter(n => !current.find(c => c.id === n.id));
+                                if (newAlerts.length > 0) {
+                                    playAlertSound();
+                                    return [...newAlerts, ...current];
+                                }
+                                return current;
+                            });
+                            
                             return [...uniqueNew, ...prev].slice(0, 10);
                         });
                     }
@@ -56,22 +90,29 @@ export default function CaretakerDashboard() {
             .catch(err => console.error("Error fetching logs:", err));
     }, [token]);
 
-    // Mock status data
-    const currentStatus = {
-        riskLevel: 'Medium', // Low, Medium, High
-        heartRate: 72,
-        lastActivity: '10 mins ago',
-        statusMessage: 'Heart rate slightly elevated during morning walk.'
-    };
-
-    const getStatusColor = (level) => {
-        switch (level.toLowerCase()) {
-            case 'high': return 'bg-red-100 text-red-700 border-red-200';
-            case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-            case 'low': return 'bg-green-100 text-green-700 border-green-200';
-            default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    // Flashing Tab Title & Continuous Audio for Unacknowledged Alerts
+    useEffect(() => {
+        let titleInterval;
+        let soundInterval;
+        
+        if (criticalAlerts.length > 0) {
+            titleInterval = setInterval(() => {
+                document.title = document.title === '🚨 URGENT ALERT' ? 'EchoCare Dashboard' : '🚨 URGENT ALERT';
+            }, 1000);
+            
+            soundInterval = setInterval(() => {
+                playAlertSound();
+            }, 5000);
+        } else {
+            document.title = 'EchoCare Dashboard';
         }
-    };
+        
+        return () => {
+            clearInterval(titleInterval);
+            clearInterval(soundInterval);
+            document.title = 'EchoCare Dashboard';
+        };
+    }, [criticalAlerts]);
 
     const getCaregiverName = () => {
         if (!userEmail) return "Caregiver";
@@ -182,39 +223,19 @@ export default function CaretakerDashboard() {
                 </div>
             </header>
 
+            {/* STICKY CRITICAL BANNER */}
+            {criticalAlerts.length > 0 && (
+                <div className="bg-red-600 text-white px-4 py-3 w-full flex justify-center items-center shadow-md animate-pulse print:hidden z-40 sticky top-20 border-b-4 border-red-800">
+                    <div className="flex items-center gap-3 font-bold max-w-screen-2xl w-full px-4 sm:px-6 lg:px-8">
+                        <AlertTriangle className="w-6 h-6" />
+                        <span>URGENT: {criticalAlerts.length} Negative Record(s) pending review! Action required.</span>
+                    </div>
+                </div>
+            )}
+
             <div className="w-full flex flex-col items-center p-4 md:p-8">
 
             <main className="w-full max-w-screen-2xl space-y-8 print:m-0 print:space-y-4">
-                {/* Status Overview Cards */}
-                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 print:hidden">
-                    {/* Risk Level Card */}
-                    <div className={`p-6 rounded-2xl border flex flex-col items-start justify-between h-32 ${getStatusColor(currentStatus.riskLevel)}`}>
-                        <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5" />
-                            <span className="font-medium">Risk Level</span>
-                        </div>
-                        <span className="text-3xl font-bold">{currentStatus.riskLevel}</span>
-                    </div>
-
-                    {/* Heart Rate Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm flex flex-col items-start justify-between h-32">
-                        <div className="flex items-center gap-2 text-[#AEB784]">
-                            <Heart className="w-5 h-5 fill-current" />
-                            <span className="font-semibold text-[#41431B]">Heart Rate</span>
-                        </div>
-                        <span className="text-3xl font-bold text-[#41431B]">{currentStatus.heartRate} <span className="text-sm text-[#AEB784] font-normal">bpm</span></span>
-                    </div>
-
-                    {/* Last Activity Card */}
-                    <div className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm flex flex-col items-start justify-between h-32">
-                        <div className="flex items-center gap-2 text-[#AEB784]">
-                            <Activity className="w-5 h-5" />
-                            <span className="font-semibold text-[#41431B]">Last Activity</span>
-                        </div>
-                        <span className="text-xl font-bold text-[#41431B]">{currentStatus.lastActivity}</span>
-                    </div>
-                </section>
-
                 {/* --- Create Elderly Account Section --- */}
                 <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:hidden">
                     <h2 className="text-lg font-bold text-[#41431B] mb-2">Manage Elderly Accounts</h2>
@@ -322,12 +343,6 @@ export default function CaretakerDashboard() {
                             {isCreating ? 'Creating...' : 'Create Account'}
                         </button>
                     </form>
-                </section>
-
-                {/* Detailed Status Message */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:hidden">
-                    <h2 className="text-lg font-bold text-[#41431B] mb-2">Current Condition</h2>
-                    <p className="text-[#41431B] opacity-80 font-medium">{currentStatus.statusMessage}</p>
                 </section>
 
                 {/* Health Records Table */}
@@ -450,6 +465,38 @@ export default function CaretakerDashboard() {
                                 className="w-full py-4 bg-[#AEB784] hover:bg-[#8a9461] text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95"
                             >
                                 Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CRITICAL ALERT MODAL (ACTION REQUIRED) */}
+            {criticalAlerts.length > 0 && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-red-900/80 backdrop-blur-md animate-in fade-in duration-200">
+                    <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border-4 border-red-500 animate-in zoom-in-95 duration-200">
+                        <div className="bg-red-500 text-white p-6 flex flex-col items-center justify-center text-center">
+                            <AlertTriangle className="w-16 h-16 mb-2 animate-bounce" />
+                            <h2 className="text-3xl font-extrabold uppercase tracking-wider">Urgent Alert</h2>
+                        </div>
+                        <div className="p-8 flex flex-col items-center text-center">
+                            <p className="text-xl font-bold text-[#41431B] mb-2">{criticalAlerts[0]?.title}</p>
+                            <p className="text-gray-600 mb-6 font-medium bg-red-50 p-4 rounded-xl border border-red-100 italic">
+                                "{criticalAlerts[0]?.message}"
+                            </p>
+                            <p className="text-sm text-red-600 font-bold mb-8 uppercase tracking-widest">
+                                Immediate Action Required
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setCriticalAlerts(prev => prev.slice(1));
+                                }}
+                                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Acknowledge
                             </button>
                         </div>
                     </div>
