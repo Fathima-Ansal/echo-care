@@ -6,15 +6,15 @@ export default function VoiceButton({ isRecording, onClick }) {
             {/* Pulsing rings when recording */}
             {isRecording && (
                 <>
-                    <div className="absolute w-64 h-64 bg-red-500/20 rounded-full animate-ping" />
-                    <div className="absolute w-56 h-56 bg-red-500/30 rounded-full animate-pulse" />
+                    <div className="absolute w-48 h-48 sm:w-64 sm:h-64 bg-red-500/20 rounded-full animate-ping" />
+                    <div className="absolute w-40 h-40 sm:w-56 sm:h-56 bg-red-500/30 rounded-full animate-pulse" />
                 </>
             )}
 
             <button
                 onClick={onClick}
                 className={`
-                    relative flex items-center justify-center w-48 h-48 rounded-full 
+                    relative flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48 rounded-full 
                     backdrop-blur-md border-[6px] transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.15)]
                     ${isRecording
                         ? 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 rotate-180 scale-110'
@@ -24,7 +24,7 @@ export default function VoiceButton({ isRecording, onClick }) {
                 aria-label={isRecording ? "Stop Recording" : "Start Recording"}
             >
                 <div className={`transition-transform duration-500 ${isRecording ? 'rotate-180' : ''}`}>
-                    <Mic className={`w-20 h-20 text-white drop-shadow-md`} strokeWidth={1.5} />
+                    <Mic className={`w-14 h-14 sm:w-20 sm:h-20 text-white drop-shadow-md`} strokeWidth={1.5} />
                 </div>
             </button>
 
