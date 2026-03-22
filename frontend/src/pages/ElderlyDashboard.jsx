@@ -17,6 +17,7 @@ export default function ElderlyDashboard() {
     const processorRef = useRef(null);
     const inputRef = useRef(null);
     const audioDataRef = useRef([]);
+    const stopRecordingRef = useRef(null);
 
     // Clock Effect
     useEffect(() => {
@@ -150,9 +151,25 @@ export default function ElderlyDashboard() {
         }
     };
 
+    // Ensure stopRecordingRef is always up to date with the latest closure
+    stopRecordingRef.current = stopRecording;
+
     const handleSOS = () => {
-        // In a real app, this would trigger a call/SMS API
-        alert("🆘 EMERGENCY ALERT SENT TO CAREGIVERS & DR. SMITH");
+        // Start automatic 30-second emergency recording without blocking the UI
+        if (!isRecording) {
+            startRecording().then(() => {
+                setTranscription("🆘 EMERGENCY ALERT SENT! Recording surroundings for 30 seconds...");
+            });
+            
+            setTimeout(() => {
+                if (stopRecordingRef.current) {
+                    console.log("SOS 30-second timeout reached. Stopping recording.");
+                    stopRecordingRef.current();
+                }
+            }, 30000); // Stop automatically after 30 seconds
+        } else {
+            setTranscription("🆘 EMERGENCY ALERT SENT! Already recording...");
+        }
     };
 
     // Helper for greeting
