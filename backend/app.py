@@ -333,6 +333,67 @@ def get_logs(current_user):
 def home():
     return "EchoCare Backend is Running!"
 
+@app.route('/api/caretaker/profile', methods=['POST'])
+@token_required
+def update_caretaker_profile(current_user):
+    if current_user['role'] != 'caregiver':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    phone_number = data.get('phone_number')
+
+    if not phone_number:
+        return jsonify({'error': 'Phone number is required'}), 400
+
+    from bson import ObjectId
+    users_collection.update_one(
+        {'_id': ObjectId(current_user['user_id'])},
+        {'$set': {'phone_number': phone_number}}
+    )
+    
+    return jsonify({'message': 'Profile updated successfully', 'phone_number': phone_number}), 200
+
+@app.route('/api/sos', methods=['POST'])
+@token_required
+def trigger_sos(current_user):
+    if current_user['role'] != 'elderly':
+        return jsonify({'error': 'Only elderly users can trigger SOS'}), 403
+
+    from bson import ObjectId
+    elderly_user = users_collection.find_one({'_id': ObjectId(current_user['user_id'])})
+    if not elderly_user or not elderly_user.get('caregiver_id'):
+        return jsonify({'error': 'No associated caregiver found'}), 404
+
+    caregiver = users_collection.find_one({'_id': ObjectId(elderly_user['caregiver_id'])})
+    if not caregiver or not caregiver.get('phone_number'):
+        return jsonify({'error': 'Caregiver does not have a registered phone number'}), 404
+
+    to_number = caregiver['phone_number']
+    
+    # Twilio integration
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    twilio_number = os.environ.get('TWILIO_PHONE_NUMBER')
+
+    if not all([account_sid, auth_token, twilio_number]):
+         # We still return success for UI purposes if config is missing, but log error
+         print("❌ Error: Missing Twilio credentials in your .env file.")
+         return jsonify({'error': 'Twilio is not configured on the server. Please add credentials to .env.'}), 500
+
+    from twilio.rest import Client
+    try:
+        client = Client(account_sid, auth_token)
+        call = client.calls.create(
+            twiml='<Response><Pause length="1"/><Say voice="alice">Emergency SOS has been triggered by an EchoCare user. Please check your dashboard immediately.</Say><Pause length="2"/><Say voice="alice">I repeat. Emergency SOS has been triggered. Please check your dashboard.</Say></Response>',
+            to=to_number,
+            from_=twilio_number
+        )
+        print(f"✅ Call successfully initiated to {to_number}! Call SID: {call.sid}")
+        return jsonify({'message': 'SOS call initiated successfully'}), 200
+    except Exception as e:
+        print(f"❌ Failed to place Twilio call: {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False, port=5000)
