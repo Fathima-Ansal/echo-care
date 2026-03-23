@@ -41,6 +41,10 @@ export default function CaretakerDashboard() {
     const [createMsg, setCreateMsg] = useState({ text: '', type: '' });
     const [isCreating, setIsCreating] = useState(false);
 
+    // Caregiver Phone Number
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [profileMsg, setProfileMsg] = useState({ text: '', type: '' });
+
     useEffect(() => {
         fetch('http://127.0.0.1:5000/api/logs', {
             headers: {
@@ -449,7 +453,7 @@ export default function CaretakerDashboard() {
                                 {userRole || 'Caregiver'} Account
                             </p>
 
-                            <div className="w-full space-y-4 mb-8">
+                            <div className="w-full space-y-4 mb-4">
                                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                     <p className="text-[10px] font-bold text-[#AEB784] uppercase tracking-wider mb-1">Email Address</p>
                                     <p className="text-[#41431B] font-medium">{userEmail}</p>
@@ -458,14 +462,55 @@ export default function CaretakerDashboard() {
                                     <p className="text-[10px] font-bold text-[#AEB784] uppercase tracking-wider mb-1">Account Role</p>
                                     <p className="text-[#41431B] font-medium capitalize">{userRole || 'Caregiver'}</p>
                                 </div>
+                                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <p className="text-[10px] font-bold text-[#AEB784] uppercase tracking-wider mb-1">Alert Contact Number</p>
+                                    <input 
+                                        type="tel"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        placeholder="e.g. +91 80869 64133"
+                                        className="w-full bg-transparent border-b border-[#AEB784]/30 focus:border-[#AEB784] outline-none py-1 text-[#41431B] font-medium placeholder:font-normal placeholder:opacity-50"
+                                    />
+                                </div>
                             </div>
+                            
+                            {profileMsg.text && (
+                                <p className={`text-xs mb-4 font-bold ${profileMsg.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                                    {profileMsg.text}
+                                </p>
+                            )}
 
-                            <button
-                                onClick={() => setShowProfile(false)}
-                                className="w-full py-4 bg-[#AEB784] hover:bg-[#8a9461] text-white font-bold rounded-2xl shadow-lg transition-all active:scale-95"
-                            >
-                                Done
-                            </button>
+                            <div className="flex gap-2 w-full mt-2">
+                                <button
+                                    onClick={async () => {
+                                        setProfileMsg({ text: 'Saving...', type: 'info' });
+                                        try {
+                                            const response = await fetch('http://localhost:5000/api/caretaker/profile', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': `Bearer ${token}`
+                                                },
+                                                body: JSON.stringify({ phone_number: phoneNumber })
+                                            });
+                                            if (!response.ok) throw new Error('Failed to save');
+                                            setProfileMsg({ text: 'Saved successfully!', type: 'success' });
+                                            setTimeout(() => setProfileMsg({ text: '', type: '' }), 3000);
+                                        } catch (err) {
+                                            setProfileMsg({ text: 'Error saving number.', type: 'error' });
+                                        }
+                                    }}
+                                    className="flex-1 py-3 bg-[#AEB784] hover:bg-[#8a9461] text-white font-bold rounded-2xl shadow-sm transition-all active:scale-95"
+                                >
+                                    Save Number
+                                </button>
+                                <button
+                                    onClick={() => setShowProfile(false)}
+                                    className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all active:scale-95"
+                                >
+                                    Done
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

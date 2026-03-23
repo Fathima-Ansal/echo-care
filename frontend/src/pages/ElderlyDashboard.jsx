@@ -154,12 +154,34 @@ export default function ElderlyDashboard() {
     // Ensure stopRecordingRef is always up to date with the latest closure
     stopRecordingRef.current = stopRecording;
 
-    const handleSOS = () => {
+    const handleSOS = async () => {
         // Start automatic 30-second emergency recording without blocking the UI
         if (!isRecording) {
             startRecording().then(() => {
                 setTranscription("🆘 EMERGENCY ALERT SENT! Recording surroundings for 30 seconds...");
             });
+            
+            // Trigger the SOS call to Caretaker
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/sos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    setTranscription("🆘 EMERGENCY ALERT SENT! Calling your caretaker now...");
+                } else {
+                    const data = await response.json();
+                    console.error("SOS Call failed:", data.error);
+                    // Append err to status
+                    setTranscription(prev => prev + " (Call failed: " + (data.error || "Unknown") + ")");
+                }
+            } catch (error) {
+                console.error("Error triggering SOS call:", error);
+                setTranscription(prev => prev + " (Network error on call)");
+            }
             
             setTimeout(() => {
                 if (stopRecordingRef.current) {
