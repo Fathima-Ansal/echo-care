@@ -183,29 +183,40 @@ def transcribe(current_user):
                             history_text += f"Companion: {lg.get('reply', '')}\n"
 
                     client = Groq(api_key=api_key)
-                    prompt = f"""
-You are a caring AI health companion for elderly users. 
-Your task is to triage their health issue by gathering information about:
-1. Duration of pain
-2. Severity of pain
-3. If they have taken any medicines
+                    prompt_template = """
+You are a caring, human-like AI health companion for elderly users. 
+Your goal is to have a natural, empathetic conversation while keeping an eye on their health.
 
-STRICT OUTPUT RULES:
-- IMPORTANT: Review the Conversation History below. Ask ONLY ONE question at a time to gather the missing information. DO NOT repeat questions.
-- MAXIMUM 3 QUESTIONS / STOPPING CONDITION: Once you have gathered all 3 pieces of information OR if you have already asked 3 questions, you MUST stop asking questions. You MUST end the conversation by saying exactly this sentence (translated to the user's language): "If the pain is increasing I suggest you to go to doctor." Do not add anything else after this sentence.
-- You MUST reply in the EXACT SAME LANGUAGE as the user! (e.g., if the user speaks Hindi, reply in Hindi script; if Malayalam, reply in Malayalam script; etc.).
+CONVERSATIONAL GUIDELINES:
+1. **Be Human**: Do not sound like a robot. Use warm, caring language. Acknowledge what the user said before asking any questions.
+2. **Sentiment-First Response**:
+   - If the user is in pain, distressed, or urgent (e.g., "help me", "pain is bad"), focus ENTIRELY on reassurance and safety. 
+   - Say things like: "I'm so sorry you're going through this. Please take a deep breath. I'm here. If it's very bad, please press the red SOS button so your caretaker can help immediately."
+   - DO NOT ask triage questions in urgent situations.
+3. **Natural Triage**:
+   - For routine updates, naturally try to find out: how long it's been happening, where it hurts, and if they've taken medicine.
+   - Ask only ONE thing at a time. Do not use lists like a), b), c). 
+   - Example: "That sounds uncomfortable. How long has that been bothering you?"
 
-CRITICAL JSON OUTPUT REQUIRED:
-You must output a strictly valid JSON object. Do NOT output markdown, explanations, or plain text outside the JSON.
-The JSON must have EXACTLY these two keys:
-1. "reply": Your direct conversational response (in the exact same language as the user), limited to 1 or 2 sentences max.
-2. "sentiment": Analyze the "Current User message" and provide exactly one of these words: "Positive", "Neutral", or "Negative".
+STRICT RULES:
+- Reply in the EXACT SAME LANGUAGE as the user!
+- Limit reply to 1-2 natural sentences.
+- NEVER repeat a question you've already asked in the history.
+- Maximum 3 total questions per conversation.
+
+CRITICAL JSON OUTPUT:
+Return ONLY a JSON object:
+{
+  "reply": "Your natural human response",
+  "sentiment": "Positive" or "Neutral" or "Negative"
+}
 
 Conversation History:
 {history_text}
 
-Current User message: "{text}"
+Current User message: "{user_text}"
 Final JSON Output:"""
+                    prompt = prompt_template.replace("{history_text}", history_text).replace("{user_text}", text)
                     response = client.chat.completions.create(
                         model="llama-3.3-70b-versatile",
                         messages=[
@@ -252,12 +263,14 @@ Final JSON Output:"""
                     from hume.models.config import ProsodyConfig
                     print("Sending audio to Hume AI for prosody detection...")
                     hume_client = HumeBatchClient(hume_api_key)
-                    job = hume_client.submit_job([], [ProsodyConfig()], files=[filepath])
-                    job.await_complete()
-                    predictions = job.get_predictions()
-                    
-                    if predictions and len(predictions) > 0:
-                        try:
+                    # Note: Hume SDK v0.3.0 does not support direct local file submission via submit_job.
+                    # We skip this for now to avoid the 'unexpected keyword argument files' error.
+                    try:
+                        job = hume_client.submit_job([], [ProsodyConfig()]) # No files argument in 0.3.0
+                        job.await_complete()
+                        predictions = job.get_predictions()
+                        
+                        if predictions and len(predictions) > 0:
                             emotions_list = predictions[0]['results']['predictions'][0]['models']['prosody']['grouped_predictions'][0]['predictions'][0]['emotions']
                             emotions_list.sort(key=lambda x: x['score'], reverse=True)
                             top_emotion = emotions_list[0]['name']
@@ -273,10 +286,10 @@ Final JSON Output:"""
                             elif top_emotion in positive_markers and top_score > 0.4:
                                 sentiment_result = "Positive"
                                 print("--> Acoustic Overridden: Positive")
-                        except Exception as parse_e:
-                            print(f"Error parsing Hume results: {parse_e}")
+                    except Exception as e:
+                        print(f"Hume AI processing failed or skipped: {e}")
                 except Exception as e:
-                    print(f"Hume AI processing failed: {e}")
+                    print(f"Hume API connection or SDK error: {e}")
 
 
             # 🔥 Save to MongoDB
@@ -284,7 +297,7 @@ Final JSON Output:"""
                 "text": text,
                 "reply": reply_text,
                 "sentiment": sentiment_result,
-                "audio_b64": audio_b64, # Save audio if needed, or omit to save DB space. Omiting to save space.
+                "audio_b64": audio_b64,
                 "language": user_language,
                 "timestamp": datetime.now(timezone.utc),
                 "user_id": current_user['user_id']

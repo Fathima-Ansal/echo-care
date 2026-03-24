@@ -391,7 +391,7 @@ export default function CaretakerDashboard() {
                                                         Voice Log
                                                     </span>
                                                     {log.sentiment && (
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                                                             log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
                                                             log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
                                                             'bg-gray-200 text-gray-700'
