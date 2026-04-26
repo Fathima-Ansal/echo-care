@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 import VoiceButton from '../components/VoiceButton';
-import { Activity } from 'lucide-react';
+import { Activity, Sun, Moon } from 'lucide-react';
 import { encodeWAV } from '../utils/wavEncoder';
 
 export default function ElderlyDashboard() {
     const { logout, userEmail, token } = useContext(AuthContext);
+    const { isDarkMode, toggleTheme } = useContext(ThemeContext);
     const [isRecording, setIsRecording] = useState(false);
     const [transcription, setTranscription] = useState('');
     const [healthLogs, setHealthLogs] = useState([]);
@@ -209,7 +211,7 @@ export default function ElderlyDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#41431B]">
+        <div className="min-h-screen bg-[#F4F5F0]  font-sans text-[#41431B]  transition-colors duration-300">
 
             {/* Background Animations changed to subtle greens */}
             <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
@@ -223,25 +225,36 @@ export default function ElderlyDashboard() {
                 {/* HEADER */}
                 <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 md:mb-14 gap-8">
                     <div>
-                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#41431B] leading-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-[#41431B]  leading-tight">
                             {getGreeting()}, <span className="capitalize">{getUserName()}</span>
                         </h1>
-                        <p className="text-[#AEB784] text-lg md:text-xl mt-3 font-semibold">
+                        <p className="text-[#AEB784]  text-lg md:text-xl mt-3 font-semibold">
                             Ready for a great day?
                         </p>
                     </div>
-                    <button
-                        onClick={logout}
-                        className="bg-white border-2 border-[#AEB784] hover:bg-[#AEB784] hover:text-white text-[#41431B] px-6 py-2 rounded-full shadow-sm font-semibold transition-colors"
-                    >
-                        Logout
-                    </button>
+                    <div className="flex items-center gap-3 md:gap-4">
+                        {/* Theme Toggle Button */}
+                        <button
+                            onClick={toggleTheme}
+                            className="p-3 rounded-full bg-white border-2 border-[#AEB784]/60  text-gray-500  hover:bg-gray-100  transition-all shadow-sm"
+                            title="Toggle Theme"
+                        >
+                            {isDarkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+                        </button>
+
+                        <button
+                            onClick={logout}
+                            className="bg-white  border-2 border-[#AEB784]  hover:bg-[#AEB784]  hover:text-white  text-[#41431B] px-6 py-2 rounded-full shadow-sm font-semibold transition-colors"
+                        >
+                            Logout
+                        </button>
+                    </div>
                 </header>
 
                 {/* MAIN CONTENT */}
                 <main className="flex flex-col gap-8 w-full max-w-4xl mx-auto">
                     {/* VOICE CARD */}
-                    <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-lg flex flex-col items-center justify-center min-h-[450px] md:min-h-[500px]">
+                    <div className="bg-white/95  backdrop-blur-xl rounded-3xl p-6 sm:p-10 shadow-2xl  drop-shadow-xl border-4 border-white  flex flex-col items-center justify-center min-h-[450px] md:min-h-[500px] transition-colors duration-300">
 
                         <VoiceButton
                             isRecording={isRecording}
@@ -270,8 +283,8 @@ export default function ElderlyDashboard() {
                     </div>
 
                     {/* RECENT HEALTH LOGS */}
-                    <section className="bg-white rounded-3xl p-8 shadow-sm border border-[#AEB784]/20">
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B]">
+                    <section className="bg-white/95  backdrop-blur-md rounded-3xl p-8 shadow-sm border border-[#AEB784]/20  transition-colors duration-300">
+                        <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-[#41431B] ">
                             <Activity className="w-6 h-6 text-[#AEB784]" />
                             Recent Health Logs
                         </h2>
@@ -294,7 +307,7 @@ export default function ElderlyDashboard() {
                                                     'bg-gray-200 text-gray-700'
                                                 }`}>
                                                     {log.sentiment === 'Positive' ? '😊 Positive' :
-                                                     log.sentiment === 'Negative' ? '😔 Negative' :
+                                                     log.sentiment === 'Negative' ? '🚨 Critical' :
                                                      '😐 Neutral'}
                                                 </span>
                                             )}
