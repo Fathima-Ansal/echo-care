@@ -1,7 +1,8 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Heart, Activity, AlertTriangle, Download, User, X, Bell, Info } from 'lucide-react';
+import { ThemeContext } from '../context/ThemeContext';
+import { Heart, Activity, AlertTriangle, Download, User, X, Bell, Info, Sun, Moon } from 'lucide-react';
 
 const playAlertSound = () => {
     try {
@@ -27,12 +28,14 @@ const playAlertSound = () => {
 
 export default function CaretakerDashboard() {
     const { token, logout, userEmail, userRole } = useContext(AuthContext);
+    const { isDarkMode, toggleTheme } = useContext(ThemeContext);
     const [healthLogs, setHealthLogs] = useState([]);
     const [showProfile, setShowProfile] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [lastAlertId, setLastAlertId] = useState(null);
     const [criticalAlerts, setCriticalAlerts] = useState([]);
+    const ackedAlertsRef = useRef(new Set());
 
     // State for creating elderly account
     const [elderlyEmail, setElderlyEmail] = useState('');
@@ -56,35 +59,34 @@ export default function CaretakerDashboard() {
                 if (Array.isArray(data)) {
                     setHealthLogs(data);
                     
-                    // Generate notifications for negative sentiments
-                    const negativeLogs = data.filter(log => log.sentiment === 'Negative');
-                    if (negativeLogs.length > 0) {
-                        const newNotifications = negativeLogs.map(log => ({
+                    // Generate notifications for critical sentiments (received as Negative from AI)
+                    const criticalLogs = data.filter(log => log.sentiment === 'Negative')
+                                             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                                             
+                    if (criticalLogs.length > 0) {
+                        const newNotifications = criticalLogs.map(log => ({
                             id: log._id || log.id,
-                            title: 'Negative Sentiment Detected',
+                            title: 'Critical Status Detected',
                             message: `Elderly user expressed: "${log.text.substring(0, 50)}..."`,
                             time: log.timestamp || new Date().toISOString(),
                             priority: 'high'
                         }));
                         
-                        // Only set if different from current to avoid loops
-                        setNotifications(prev => {
-                            const existingIds = new Set(prev.map(n => n.id));
-                            const uniqueNew = newNotifications.filter(n => !existingIds.has(n.id));
-                            if (uniqueNew.length === 0) return prev;
-                            
-                            // Trigger critical alerts for newly fetched negative logs
+                        // Set the top 10 newest directly in header notifications to avoid duplicate loops
+                        setNotifications(newNotifications.slice(0, 10));
+                        
+                        // Trigger critical popup ONLY for the absolute newest log, if not yet acknowledged
+                        const newestAlert = newNotifications[0];
+                        if (!ackedAlertsRef.current.has(newestAlert.id)) {
                             setCriticalAlerts(current => {
-                                const newAlerts = uniqueNew.filter(n => !current.find(c => c.id === n.id));
-                                if (newAlerts.length > 0) {
-                                    playAlertSound();
-                                    return [...newAlerts, ...current];
+                                // If the modal is already showing this exact alert, leave it
+                                if (current.length > 0 && current[0].id === newestAlert.id) {
+                                    return current;
                                 }
-                                return current;
+                                playAlertSound();
+                                return [newestAlert];
                             });
-                            
-                            return [...uniqueNew, ...prev].slice(0, 10);
-                        });
+                        }
                     }
                 } else {
                     console.error("Backend error instead of logs:", data);
@@ -94,26 +96,20 @@ export default function CaretakerDashboard() {
             .catch(err => console.error("Error fetching logs:", err));
     }, [token]);
 
-    // Flashing Tab Title & Continuous Audio for Unacknowledged Alerts
+    // Flashing Tab Title for Unacknowledged Alerts
     useEffect(() => {
         let titleInterval;
-        let soundInterval;
         
         if (criticalAlerts.length > 0) {
             titleInterval = setInterval(() => {
                 document.title = document.title === '🚨 URGENT ALERT' ? 'EchoCare Dashboard' : '🚨 URGENT ALERT';
             }, 1000);
-            
-            soundInterval = setInterval(() => {
-                playAlertSound();
-            }, 5000);
         } else {
             document.title = 'EchoCare Dashboard';
         }
         
         return () => {
             clearInterval(titleInterval);
-            clearInterval(soundInterval);
             document.title = 'EchoCare Dashboard';
         };
     }, [criticalAlerts]);
@@ -135,19 +131,27 @@ export default function CaretakerDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F9F9F6] font-sans text-[#41431B] print:bg-white print:p-0">
+        <div className="min-h-screen bg-[#F4F5F0]  font-sans text-[#41431B]  print:bg-white print:p-0 transition-colors duration-300">
             {/* NAVIGATION HEADER */}
-            <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-[#AEB784]/20 shadow-sm print:hidden">
+            <header className="sticky top-0 z-50 w-full bg-white/90  backdrop-blur-xl border-b-2 border-[#AEB784]/40  shadow-md print:hidden transition-colors duration-300">
                 <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-20">
                         {/* Logo/Title Area */}
                         <div className="flex flex-col">
-                            <h1 className="text-2xl font-extrabold text-[#41431B] leading-none">EchoCare</h1>
+                            <h1 className="text-2xl font-extrabold text-[#41431B]  leading-none">EchoCare</h1>
                             <span className="text-xs font-bold text-[#AEB784] tracking-widest mt-1">CAREGIVER PORTAL</span>
                         </div>
 
                         {/* Actions Area */}
                         <div className="flex items-center gap-3 sm:gap-5">
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="p-2.5 rounded-xl bg-gray-50  text-gray-500  hover:bg-gray-100  transition-all border border-gray-100 "
+                                title="Toggle Theme"
+                            >
+                                {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
                             {/* Notification Bell */}
                             <div className="relative">
                                 <button 
@@ -232,7 +236,7 @@ export default function CaretakerDashboard() {
                 <div className="bg-red-600 text-white px-4 py-3 w-full flex justify-center items-center shadow-md animate-pulse print:hidden z-40 sticky top-20 border-b-4 border-red-800">
                     <div className="flex items-center gap-3 font-bold max-w-screen-2xl w-full px-4 sm:px-6 lg:px-8">
                         <AlertTriangle className="w-6 h-6" />
-                        <span>URGENT: {criticalAlerts.length} Negative Record(s) pending review! Action required.</span>
+                        <span>URGENT: {criticalAlerts.length} Critical Record(s) pending review! Action required.</span>
                     </div>
                 </div>
             )}
@@ -241,9 +245,9 @@ export default function CaretakerDashboard() {
 
             <main className="w-full max-w-screen-2xl space-y-8 print:m-0 print:space-y-4">
                 {/* --- Create Elderly Account Section --- */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:hidden">
-                    <h2 className="text-lg font-bold text-[#41431B] mb-2">Manage Elderly Accounts</h2>
-                    <p className="text-sm text-[#AEB784] mb-4 font-medium">Create login credentials for the elderly users you care for.</p>
+                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:hidden transition-colors duration-300">
+                    <h2 className="text-xl font-extrabold text-[#41431B]  mb-2">Manage Elderly Accounts</h2>
+                    <p className="text-sm text-[#7a8450]  mb-4 font-bold">Create login credentials for the elderly users you care for.</p>
 
                     {createMsg.text && (
                         <div className={`p-3 rounded-lg mb-4 text-sm ${createMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
@@ -350,9 +354,9 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* Health Records Table */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm print:border-none print:shadow-none print:p-0">
+                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:border-none print:shadow-none print:p-0 transition-colors duration-300">
                     <div className="flex items-center justify-between mb-6 print:hidden">
-                        <h2 className="text-lg font-bold text-[#41431B]">Health Records</h2>
+                        <h2 className="text-xl font-extrabold text-[#41431B] ">Health Records</h2>
                         <button 
                             onClick={downloadPDF}
                             className="flex items-center gap-1 text-sm bg-[#AEB784]/10 text-[#AEB784] hover:bg-[#AEB784]/20 px-3 py-1.5 rounded-lg font-bold transition-colors"
@@ -361,7 +365,7 @@ export default function CaretakerDashboard() {
                         </button>
                     </div>
 
-                    <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white">
+                    <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white  transition-colors duration-300">
                         {/* We add a title inside the container specifically for the PDF download */}
                         <div className="hidden print:block mb-4">
                             <h1 className="text-2xl font-bold text-[#41431B]">EchoCare Health Logs</h1>
@@ -396,7 +400,7 @@ export default function CaretakerDashboard() {
                                                             log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
                                                             'bg-gray-200 text-gray-700'
                                                         }`}>
-                                                            {log.sentiment}
+                                                            {log.sentiment === 'Negative' ? 'CRITICAL' : log.sentiment}
                                                         </span>
                                                     )}
                                                 </div>
@@ -415,8 +419,8 @@ export default function CaretakerDashboard() {
                 </section>
 
                 {/* Progress/Adherence Tracking Placeholder */}
-                <section className="bg-white p-6 rounded-2xl border border-[#AEB784]/20 shadow-sm mb-8 print:hidden">
-                    <h2 className="text-lg font-bold text-[#41431B] mb-4">Weekly Adherence</h2>
+                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm mb-8 print:hidden transition-colors duration-300">
+                    <h2 className="text-xl font-extrabold text-[#41431B]  mb-4">Weekly Adherence</h2>
                     <div className="flex items-center gap-4">
                         <div className="flex-1 h-3 bg-[#F9F9F6] rounded-full overflow-hidden border border-[#AEB784]/20">
                             <div className="h-full bg-[#AEB784] w-3/4 rounded-full"></div>
@@ -534,7 +538,10 @@ export default function CaretakerDashboard() {
                             </p>
                             <button
                                 onClick={() => {
-                                    setCriticalAlerts(prev => prev.slice(1));
+                                    if (criticalAlerts[0]) {
+                                        ackedAlertsRef.current.add(criticalAlerts[0].id);
+                                    }
+                                    setCriticalAlerts([]);
                                 }}
                                 className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
