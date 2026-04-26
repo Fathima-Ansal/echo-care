@@ -2,7 +2,7 @@
 
 ## 📌 Project Overview
 
-EchoCare is a **voice-based health diary system** designed to help elderly users record their daily health conditions easily using **voice input instead of typing**. The system converts spoken updates into text, analyzes them using **Natural Language Processing (NLP)**, and stores the records securely for future monitoring.
+EchoCare is a **voice-based health diary system** designed to help elderly users record their daily health conditions easily using **voice input instead of typing**. The system converts spoken updates into text,AI-based system that can analyze user interactions, classify severity levels, and provide timely assistance through simple and accessible interfaces.
 
 ---
 
