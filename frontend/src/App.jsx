@@ -1,3 +1,5 @@
+
+import Landing from './pages/Landing';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
@@ -29,10 +31,11 @@ function App() {
       <AuthProvider>
         <Router>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedRoute allowedRole="elderly">
                 <ElderlyDashboard />
