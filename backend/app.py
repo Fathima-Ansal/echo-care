@@ -324,12 +324,18 @@ def get_logs(current_user):
         if current_user['role'] == 'elderly':
             # Fetch logs for this elderly user
             logs = list(logs_collection.find({"user_id": current_user['user_id']}).sort("timestamp", -1))
+            for log in logs:
+                log["elderly_name"] = current_user.get("email", "You")
         elif current_user['role'] == 'caregiver':
             # Get elderly users tied to this caregiver
-            elderly_users = users_collection.find({"caregiver_id": current_user["user_id"]})
+            elderly_users = list(users_collection.find({"caregiver_id": current_user["user_id"]}))
             elderly_ids = [str(u["_id"]) for u in elderly_users]
+            elderly_map = {str(u["_id"]): u.get("email", "Unknown") for u in elderly_users}
+            
             # Fetch logs for these elderly users
             logs = list(logs_collection.find({"user_id": {"$in": elderly_ids}}).sort("timestamp", -1))
+            for log in logs:
+                log["elderly_name"] = elderly_map.get(str(log.get("user_id")), "Unknown User")
         else:
             return jsonify({'error': 'Unauthorized role'}), 403
             
