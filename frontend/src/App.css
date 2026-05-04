@@ -12,6 +12,7 @@ body[data-theme='dark'] {
 
 body[data-theme='dark'] .bg-\[\#F4F5F0\] { background-color: #111827 !important; color: #F9FAFB !important; }
 body[data-theme='dark'] .bg-\[\#F9F9F6\] { background-color: #111827 !important; color: #F9FAFB !important; }
+body[data-theme='dark'] .hover\:bg-\[\#F9F9F6\]:hover { background-color: #374151 !important; }
 body[data-theme='dark'] .bg-white { background-color: #1F2937 !important; border-color: #374151 !important;}
 body[data-theme='dark'] .bg-white\/90 { background-color: rgba(31, 41, 55, 0.9) !important; border-color: #374151 !important;}
 body[data-theme='dark'] .bg-white\/95 { background-color: rgba(31, 41, 55, 0.95) !important; border-color: #374151 !important;}
