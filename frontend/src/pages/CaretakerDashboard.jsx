@@ -30,6 +30,8 @@ export default function CaretakerDashboard() {
     const { token, logout, userEmail, userRole } = useContext(AuthContext);
     const { isDarkMode, toggleTheme } = useContext(ThemeContext);
     const [healthLogs, setHealthLogs] = useState([]);
+    const [selectedDate, setSelectedDate] = useState(''); // empty means All Dates
+    const [selectedSentiment, setSelectedSentiment] = useState('All');
     const [showProfile, setShowProfile] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -119,11 +121,36 @@ export default function CaretakerDashboard() {
         return userEmail.split('@')[0];
     };
 
+    const getLocalYYYYMMDD = (dateStr) => {
+        const d = new Date(dateStr);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const filteredLogs = healthLogs.filter(log => {
+        const dateMatch = !selectedDate || getLocalYYYYMMDD(log.timestamp) === selectedDate;
+        let sentimentMatch = true;
+        if (selectedSentiment !== 'All') {
+            if (selectedSentiment === 'Critical') {
+                sentimentMatch = log.sentiment === 'Negative';
+            } else if (selectedSentiment === 'Positive') {
+                sentimentMatch = log.sentiment === 'Positive';
+            } else if (selectedSentiment === 'Neutral') {
+                sentimentMatch = log.sentiment === 'Neutral' || !log.sentiment;
+            }
+        }
+        return dateMatch && sentimentMatch;
+    });
+
     const downloadPDF = () => {
         // Use the native browser print dialog which supports perfect PDF rendering 
         // with complex scripts and allows "Save as PDF".
         const originalTitle = document.title;
-        document.title = `EchoCare_Logs_${new Date().toLocaleDateString().replace(/\//g, '-')}`;
+        const dateStr = selectedDate ? selectedDate : new Date().toLocaleDateString().replace(/\//g, '-');
+        const filterStr = selectedSentiment !== 'All' ? `_${selectedSentiment}` : '';
+        document.title = `EchoCare_Logs_${dateStr}${filterStr}`;
         window.print();
         setTimeout(() => {
             document.title = originalTitle;
@@ -365,47 +392,86 @@ export default function CaretakerDashboard() {
                         </button>
                     </div>
 
+                    {/* FILTERS */}
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
+                        <div className="flex flex-col">
+                            <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Date</label>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="date"
+                                    value={selectedDate} 
+                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    style={{ colorScheme: isDarkMode ? 'dark' : 'light' }}
+                                    className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
+                                />
+                                {selectedDate && (
+                                    <button 
+                                        onClick={() => setSelectedDate('')}
+                                        className="text-xs text-[#AEB784] hover:text-[#41431B] font-bold underline transition-colors"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex flex-col">
+                            <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Status</label>
+                            <select 
+                                value={selectedSentiment} 
+                                onChange={(e) => setSelectedSentiment(e.target.value)}
+                                className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Critical">Critical Only</option>
+                                <option value="Positive">Positive</option>
+                                <option value="Neutral">Neutral</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white  transition-colors duration-300">
                         {/* We add a title inside the container specifically for the PDF download */}
-                        <div className="hidden print:block mb-4">
-                            <h1 className="text-2xl font-bold text-[#41431B]">EchoCare Health Logs</h1>
-                            <p className="text-sm text-[#AEB784]">Generated on: {new Date().toLocaleString()}</p>
+                        <div className="hidden print:block mb-6 border-b-2 border-gray-800 pb-4">
+                            <h1 className="text-4xl font-extrabold text-black mb-2">EchoCare Health Logs</h1>
+                            <p className="text-xl font-bold text-gray-800">
+                                Date: {selectedDate ? selectedDate : 'All Dates'}
+                            </p>
                         </div>
                         
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="text-sm text-[#AEB784] border-b border-[#AEB784]/20">
-                                    <th className="py-3 font-medium">Date</th>
-                                    <th className="py-3 font-medium">Type</th>
-                                    <th className="py-3 font-medium">Notes</th>
+                                <tr className="text-sm text-[#AEB784] print:text-black border-b border-[#AEB784]/20 print:border-black">
+                                    <th className="py-3 font-bold print:font-extrabold">Date</th>
+                                    <th className="py-3 font-bold print:font-extrabold">Type</th>
+                                    <th className="py-3 font-bold print:font-extrabold">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {healthLogs.length > 0 ? (
-                                    healthLogs.map((log) => (
-                                        <tr key={log._id} className="border-b border-[#AEB784]/10 last:border-0 hover:bg-[#F9F9F6] transition-colors">
-                                            <td className="py-4 text-[#41431B] text-sm font-medium">
+                                {filteredLogs.length > 0 ? (
+                                    filteredLogs.map((log) => (
+                                        <tr key={log._id || log.id} className="border-b border-[#AEB784]/10 print:border-gray-300 last:border-0 hover:bg-[#F9F9F6] transition-colors">
+                                            <td className="py-4 text-[#41431B] print:text-black text-sm font-medium">
                                                 {new Date(log.timestamp).toLocaleDateString()}
                                                 <br />
-                                                <span className="text-xs text-[#AEB784]">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <span className="text-xs text-[#AEB784] print:text-gray-800">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </td>
-                                            <td className="py-4 text-[#41431B] font-medium text-sm">
+                                            <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
                                                 <div className="flex flex-col gap-2 items-start">
-                                                    <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] font-bold">
+                                                    <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] print:text-black print:border print:border-black font-bold">
                                                         Voice Log
                                                     </span>
                                                     {log.sentiment && (
                                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                            log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
-                                                            log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
-                                                            'bg-gray-200 text-gray-700'
+                                                            log.sentiment === 'Positive' ? 'bg-green-100 text-green-700 print:bg-white print:text-black print:border print:border-black' :
+                                                            log.sentiment === 'Negative' ? 'bg-red-100 text-red-700 print:bg-white print:text-black print:border print:border-black' :
+                                                            'bg-gray-200 text-gray-700 print:bg-white print:text-black print:border print:border-black'
                                                         }`}>
                                                             {log.sentiment === 'Negative' ? 'CRITICAL' : log.sentiment}
                                                         </span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-4 text-[#41431B] opacity-80 text-sm max-w-xs truncate" title={log.text}>"{log.text}"</td>
+                                            <td className="py-4 text-[#41431B] print:text-black text-sm print:text-base font-semibold max-w-xs truncate print:whitespace-normal print:max-w-none" title={log.text}>"{log.text}"</td>
                                         </tr>
                                     ))
                                 ) : (
