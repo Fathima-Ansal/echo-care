@@ -442,6 +442,7 @@ export default function CaretakerDashboard() {
                             <thead>
                                 <tr className="text-sm text-[#AEB784] print:text-black border-b border-[#AEB784]/20 print:border-black">
                                     <th className="py-3 font-bold print:font-extrabold">Date</th>
+                                    <th className="py-3 font-bold print:font-extrabold">User</th>
                                     <th className="py-3 font-bold print:font-extrabold">Type</th>
                                     <th className="py-3 font-bold print:font-extrabold">Notes</th>
                                 </tr>
@@ -454,6 +455,9 @@ export default function CaretakerDashboard() {
                                                 {new Date(log.timestamp).toLocaleDateString()}
                                                 <br />
                                                 <span className="text-xs text-[#AEB784] print:text-gray-800">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </td>
+                                            <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
+                                                {log.elderly_name || "Unknown"}
                                             </td>
                                             <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
                                                 <div className="flex flex-col gap-2 items-start">
