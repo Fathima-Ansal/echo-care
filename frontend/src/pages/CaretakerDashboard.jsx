@@ -38,7 +38,8 @@ export default function CaretakerDashboard() {
     const [lastAlertId, setLastAlertId] = useState(null);
     const [criticalAlerts, setCriticalAlerts] = useState([]);
     const ackedAlertsRef = useRef(new Set());
-
+    const [expandedLogs, setExpandedLogs] = useState(new Set());
+    const [visibleLogsCount, setVisibleLogsCount] = useState(10);
     // State for creating elderly account
     const [elderlyEmail, setElderlyEmail] = useState('');
     const [elderlyPassword, setElderlyPassword] = useState('');
@@ -143,6 +144,16 @@ export default function CaretakerDashboard() {
         }
         return dateMatch && sentimentMatch;
     });
+    const toggleLogExpansion = (logId) => {
+        setExpandedLogs(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(logId)) newSet.delete(logId);
+            else newSet.add(logId);
+            return newSet;
+        });
+    };
+
+    const displayedLogs = filteredLogs.slice(0, visibleLogsCount);
 
     const downloadPDF = () => {
         // Use the native browser print dialog which supports perfect PDF rendering 
@@ -448,8 +459,10 @@ export default function CaretakerDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredLogs.length > 0 ? (
-                                    filteredLogs.map((log) => (
+                                {displayedLogs.length > 0 ? (
+                                    displayedLogs.map((log) => {
+                                        const isExpanded = expandedLogs.has(log._id || log.id);
+                                        return (
                                         <tr key={log._id || log.id} className="border-b border-[#AEB784]/10 print:border-gray-300 last:border-0 hover:bg-[#F9F9F6] transition-colors">
                                             <td className="py-4 text-[#41431B] print:text-black text-sm font-medium">
                                                 {new Date(log.timestamp).toLocaleDateString()}
@@ -475,9 +488,21 @@ export default function CaretakerDashboard() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-4 text-[#41431B] print:text-black text-sm print:text-base font-semibold max-w-xs truncate print:whitespace-normal print:max-w-none" title={log.text}>"{log.text}"</td>
+                                            <td className="py-4 text-[#41431B] print:text-black text-sm print:text-base font-semibold max-w-xs print:whitespace-normal print:max-w-none">
+                                                <div className={isExpanded ? "" : "truncate"} title={isExpanded ? "" : log.text}>
+                                                    "{log.text}"
+                                                </div>
+                                                {log.text && log.text.length > 40 && (
+                                                    <button 
+                                                        onClick={() => toggleLogExpansion(log._id || log.id)} 
+                                                        className="text-[10px] uppercase tracking-wider text-[#AEB784] hover:text-[#6a7536] mt-1.5 font-bold block print:hidden"
+                                                    >
+                                                        {isExpanded ? "Show Less" : "Read More"}
+                                                    </button>
+                                                )}
+                                            </td>
                                         </tr>
-                                    ))
+                                    )})
                                 ) : (
                                     <tr>
                                         <td colSpan="4" className="py-4 text-center text-[#AEB784] font-medium">No logs found.</td>
@@ -485,20 +510,28 @@ export default function CaretakerDashboard() {
                                 )}
                             </tbody>
                         </table>
+                        
+                        <div className="flex justify-center gap-4 mt-6 print:hidden">
+                            {visibleLogsCount < filteredLogs.length && (
+                                <button
+                                    onClick={() => setVisibleLogsCount(prev => prev + 10)}
+                                    className="px-6 py-2.5 bg-[#AEB784] text-white hover:bg-[#8a9461] shadow-md rounded-xl font-bold transition-all text-sm flex items-center gap-2"
+                                >
+                                    Load More Logs
+                                </button>
+                            )}
+                            {visibleLogsCount > 10 && (
+                                <button
+                                    onClick={() => setVisibleLogsCount(10)}
+                                    className="px-6 py-2.5 bg-gray-200 text-gray-800 hover:bg-gray-300 shadow-sm rounded-xl font-bold transition-all text-sm flex items-center gap-2"
+                                >
+                                    Show Less Logs
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </section>
 
-                {/* Progress/Adherence Tracking Placeholder */}
-                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm mb-8 print:hidden transition-colors duration-300">
-                    <h2 className="text-xl font-extrabold text-[#41431B]  mb-4">Weekly Adherence</h2>
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1 h-3 bg-[#F9F9F6] rounded-full overflow-hidden border border-[#AEB784]/20">
-                            <div className="h-full bg-[#AEB784] w-3/4 rounded-full"></div>
-                        </div>
-                        <span className="text-[#41431B] font-bold">75%</span>
-                    </div>
-                    <p className="text-sm text-[#AEB784] font-medium mt-2">Medication and exercise adherence for this week.</p>
-                </section>
             </main>
             </div>
 
