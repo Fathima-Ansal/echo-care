@@ -482,8 +482,8 @@ export default function CaretakerDashboard() {
                                                             </span>
                                                             {log.sentiment && (
                                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${log.sentiment === 'Positive' ? 'bg-green-100 text-green-700 print:bg-white print:text-black print:border print:border-black' :
-                                                                        log.sentiment === 'Negative' ? 'bg-red-100 text-red-700 print:bg-white print:text-black print:border print:border-black' :
-                                                                            'bg-gray-200 text-gray-700 print:bg-white print:text-black print:border print:border-black'
+                                                                    log.sentiment === 'Negative' ? 'bg-red-100 text-red-700 print:bg-white print:text-black print:border print:border-black' :
+                                                                        'bg-gray-200 text-gray-700 print:bg-white print:text-black print:border print:border-black'
                                                                     }`}>
                                                                     {log.sentiment === 'Negative' ? 'CRITICAL' : log.sentiment}
                                                                 </span>

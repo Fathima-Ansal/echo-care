@@ -214,7 +214,7 @@ export default function ElderlyDashboard() {
         <div className="min-h-screen bg-[#F4F5F0]  font-sans text-[#41431B]  transition-colors duration-300">
 
             {/* Background Animations changed to subtle greens */}
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-50">
                 <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#AEB784] to-transparent"></div>
                 <div className="absolute -top-20 -right-20 w-96 h-96 bg-[#AEB784] rounded-full blur-3xl opacity-40"></div>
                 <div className="absolute top-40 -left-20 w-72 h-72 bg-[#AEB784] rounded-full blur-3xl opacity-30"></div>
@@ -302,8 +302,8 @@ export default function ElderlyDashboard() {
                                             </p>
                                             {log.sentiment && (
                                                 <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
-                                                        log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
-                                                            'bg-gray-200 text-gray-700'
+                                                    log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
+                                                        'bg-gray-200 text-gray-700'
                                                     }`}>
                                                     {log.sentiment === 'Positive' ? '😊 Positive' :
                                                         log.sentiment === 'Negative' ? '🚨 Critical' :
@@ -312,7 +312,7 @@ export default function ElderlyDashboard() {
                                             )}
                                         </div>
                                         {log.reply && (
-                                            <div className="font-medium text-[#41431B] mt-2 bg-white/50 p-3 rounded-lg border border-[#AEB784]/20 shadow-sm flex items-start justify-between gap-4">
+                                            <div className="font-medium text-[#41431B] mt-2 bg-white/80 p-3 rounded-lg border-2 border-[#AEB784]/30 shadow-md flex items-start justify-between gap-4">
                                                 <p>
                                                     <span className="font-bold text-blue-800">Companion:</span> {log.reply}
                                                 </p>
@@ -349,7 +349,7 @@ export default function ElderlyDashboard() {
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg">
                     <button
                         onClick={handleSOS}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-5 rounded-3xl shadow-lg transition-transform hover:scale-105 active:scale-95"
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold tracking-widest text-lg py-5 rounded-3xl shadow-2xl drop-shadow-xl transition-transform hover:scale-105 active:scale-95 border-b-4 border-red-800"
                     >
                         EMERGENCY SOS
                     </button>
