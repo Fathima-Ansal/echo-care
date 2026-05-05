@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Auth.css'; // We'll create a basic CSS file for Auth
 
-const Login = () => {
+const Login = ({ hideBackLink }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -34,7 +34,7 @@ const Login = () => {
             if (data.role === 'caregiver') {
                 navigate('/caretaker');
             } else {
-                navigate('/');
+                navigate('/dashboard');
             }
         } catch (err) {
             setError(err.message);
@@ -46,6 +46,15 @@ const Login = () => {
     return (
         <div className="auth-container">
             <div className="auth-card">
+                {!hideBackLink && (
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className="back-btn" 
+                        style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}
+                    >
+                        <span>←</span> Back to Home
+                    </button>
+                )}
                 <h2>Welcome Back to EchoCare</h2>
                 {error && <div className="auth-error">{error}</div>}
                 <form onSubmit={handleSubmit} className="auth-form">

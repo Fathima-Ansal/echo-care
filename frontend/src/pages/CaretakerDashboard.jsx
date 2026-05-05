@@ -52,6 +52,9 @@ export default function CaretakerDashboard() {
     const [profileMsg, setProfileMsg] = useState({ text: '', type: '' });
 
     useEffect(() => {
+        // Ensure the page always starts at the top when navigating here
+        window.scrollTo(0, 0);
+
         fetch('http://127.0.0.1:5000/api/logs', {
             headers: {
                 'Authorization': `Bearer ${token}`
