@@ -98,6 +98,13 @@ def verify_otp():
             'created_at': datetime.utcnow(),
             'is_verified': True
         }
+        
+        # Add optional elderly fields if they exist in the OTP record
+        if 'caregiver_id' in otp_record:
+            new_user['caregiver_id'] = otp_record['caregiver_id']
+        if 'preferred_language' in otp_record:
+            new_user['preferred_language'] = otp_record['preferred_language']
+            
         users_collection.insert_one(new_user)
         
     otps_collection.delete_one({'_id': otp_record['_id']})
@@ -213,17 +220,27 @@ def create_elderly(current_user):
 
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-    new_user = {
-        'email': email,
-        'password': hashed_password.decode('utf-8'),
-        'role': 'elderly',
-        'preferred_language': preferred_language,
-        'caregiver_id': current_user['user_id'],
-        'created_at': datetime.now(timezone.utc)
-    }
+    # Generate 6-digit OTP
+    otp = ''.join(random.choices(string.digits, k=6))
+    
+    # Hold user data temporarily in OTP collection
+    otps_collection.update_one(
+        {'email': email},
+        {'$set': {
+            'otp': otp,
+            'password': hashed_password.decode('utf-8'),
+            'role': 'elderly',
+            'preferred_language': preferred_language,
+            'caregiver_id': current_user['user_id'],
+            'expires_at': datetime.utcnow() + timedelta(minutes=10)
+        }},
+        upsert=True
+    )
+    
+    # Send email
+    send_otp_email(email, otp)
 
-    users_collection.insert_one(new_user)
-    return jsonify({'message': 'Elderly user created successfully'}), 201
+    return jsonify({'message': 'Elderly user created. OTP verification required.', 'requires_otp': True}), 201
 
 
 @app.route('/api/transcribe', methods=['POST'])

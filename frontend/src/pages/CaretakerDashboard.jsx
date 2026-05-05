@@ -46,6 +46,8 @@ export default function CaretakerDashboard() {
     const [elderlyLanguage, setElderlyLanguage] = useState('ml-IN');
     const [createMsg, setCreateMsg] = useState({ text: '', type: '' });
     const [isCreating, setIsCreating] = useState(false);
+    const [showElderlyOtp, setShowElderlyOtp] = useState(false);
+    const [elderlyOtp, setElderlyOtp] = useState('');
 
     // Caregiver Phone Number
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -321,11 +323,15 @@ export default function CaretakerDashboard() {
 
                                     if (!response.ok) throw new Error(data.error || 'Failed to create account');
 
-                                    setCreateMsg({ text: 'Account created successfully!', type: 'success' });
-                                    setElderlyEmail('');
-                                    setElderlyPassword('');
-
-                                    setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
+                                    if (data.requires_otp) {
+                                        setCreateMsg({ text: data.message || 'OTP sent! Please verify.', type: 'success' });
+                                        setShowElderlyOtp(true);
+                                    } else {
+                                        setCreateMsg({ text: 'Account created successfully!', type: 'success' });
+                                        setElderlyEmail('');
+                                        setElderlyPassword('');
+                                        setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
+                                    }
                                 } catch (err) {
                                     setCreateMsg({ text: err.message, type: 'error' });
                                 } finally {
@@ -333,64 +339,114 @@ export default function CaretakerDashboard() {
                                 }
                             }}
                         >
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Username / Email</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={elderlyEmail}
-                                    onChange={(e) => setElderlyEmail(e.target.value)}
-                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                                    placeholder="e.g. grandpa_joe"
-                                />
-                            </div>
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Password</label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={elderlyPassword}
-                                    onChange={(e) => setElderlyPassword(e.target.value)}
-                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                                    placeholder="Create a password"
-                                />
-                            </div>
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Language</label>
-                                <select
-                                    value={elderlyLanguage}
-                                    onChange={(e) => setElderlyLanguage(e.target.value)}
-                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                                >
-                                    <option value="ml-IN">Malayalam (മലയാളം)</option>
-                                    <option value="en-US">English (US)</option>
-                                    <option value="en-IN">English (India)</option>
-                                    <option value="hi-IN">Hindi (हिन्दी)</option>
-                                    <option value="ta-IN">Tamil (தமிழ்)</option>
-                                    <option value="te-IN">Telugu (తెలుగు)</option>
-                                    <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
-                                    <option value="mr-IN">Marathi (मराठी)</option>
-                                    <option value="gu-IN">Gujarati (ગુજરાતી)</option>
-                                    <option value="bn-IN">Bengali (বাংলা)</option>
-                                    <option value="es-ES">Spanish (Español)</option>
-                                    <option value="fr-FR">French (Français)</option>
-                                    <option value="de-DE">German (Deutsch)</option>
-                                    <option value="it-IT">Italian (Italiano)</option>
-                                    <option value="pt-BR">Portuguese (Português)</option>
-                                    <option value="ru-RU">Russian (Русский)</option>
-                                    <option value="ar-SA">Arabic (العربية)</option>
-                                    <option value="zh-CN">Chinese (中文)</option>
-                                    <option value="ja-JP">Japanese (日本語)</option>
-                                    <option value="ko-KR">Korean (한국어)</option>
-                                </select>
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={isCreating}
-                                className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
-                            >
-                                {isCreating ? 'Creating...' : 'Create Account'}
-                            </button>
+                            {!showElderlyOtp ? (
+                                <>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Username / Email</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={elderlyEmail}
+                                            onChange={(e) => setElderlyEmail(e.target.value)}
+                                            className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                            placeholder="e.g. grandpa_joe"
+                                        />
+                                    </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Password</label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={elderlyPassword}
+                                            onChange={(e) => setElderlyPassword(e.target.value)}
+                                            className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                            placeholder="Create a password"
+                                        />
+                                    </div>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Language</label>
+                                        <select
+                                            value={elderlyLanguage}
+                                            onChange={(e) => setElderlyLanguage(e.target.value)}
+                                            className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                        >
+                                            <option value="ml-IN">Malayalam (മലയാളം)</option>
+                                            <option value="en-US">English (US)</option>
+                                            <option value="en-IN">English (India)</option>
+                                            <option value="hi-IN">Hindi (हिन्दी)</option>
+                                            <option value="ta-IN">Tamil (தமிழ்)</option>
+                                            <option value="te-IN">Telugu (తెలుగు)</option>
+                                            <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                                            <option value="mr-IN">Marathi (मराठी)</option>
+                                            <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+                                            <option value="bn-IN">Bengali (বাংলা)</option>
+                                            <option value="es-ES">Spanish (Español)</option>
+                                            <option value="fr-FR">French (Français)</option>
+                                            <option value="de-DE">German (Deutsch)</option>
+                                            <option value="it-IT">Italian (Italiano)</option>
+                                            <option value="pt-BR">Portuguese (Português)</option>
+                                            <option value="ru-RU">Russian (Русский)</option>
+                                            <option value="ar-SA">Arabic (العربية)</option>
+                                            <option value="zh-CN">Chinese (中文)</option>
+                                            <option value="ja-JP">Japanese (日本語)</option>
+                                            <option value="ko-KR">Korean (한국어)</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={isCreating}
+                                        className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
+                                    >
+                                        {isCreating ? 'Creating...' : 'Create Account'}
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex-1 w-full">
+                                        <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Verification Code</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={elderlyOtp}
+                                            onChange={(e) => setElderlyOtp(e.target.value)}
+                                            className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                            placeholder="Enter 6-digit OTP"
+                                            maxLength="6"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={isCreating}
+                                        onClick={async () => {
+                                            setCreateMsg({ text: '', type: '' });
+                                            setIsCreating(true);
+                                            try {
+                                                const response = await fetch('http://localhost:5000/api/verify-otp', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ email: elderlyEmail, otp: elderlyOtp }),
+                                                });
+                                                const data = await response.json();
+                                                if (!response.ok) throw new Error(data.error || 'Verification failed');
+                                                
+                                                setCreateMsg({ text: 'Elderly account verified and created successfully!', type: 'success' });
+                                                setElderlyEmail('');
+                                                setElderlyPassword('');
+                                                setElderlyOtp('');
+                                                setShowElderlyOtp(false);
+                                                setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
+                                            } catch (err) {
+                                                setCreateMsg({ text: err.message, type: 'error' });
+                                            } finally {
+                                                setIsCreating(false);
+                                            }
+                                        }}
+                                        className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
+                                    >
+                                        {isCreating ? 'Verifying...' : 'Verify OTP'}
+                                    </button>
+                                </>
+                            )}
                         </form>
                     </section>
 
