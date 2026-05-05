@@ -128,7 +128,7 @@ export default function ElderlyDashboard() {
             const data = await response.json();
             if (response.ok) {
                 setTranscription(data.text);
-                
+
                 // If AI Companion replied with audio, play it automatically
                 if (data.audio_b64) {
                     const audioSrc = "data:audio/mp3;base64," + data.audio_b64;
@@ -162,7 +162,7 @@ export default function ElderlyDashboard() {
             startRecording().then(() => {
                 setTranscription("🆘 EMERGENCY ALERT SENT! Recording surroundings for 30 seconds...");
             });
-            
+
             // Trigger the SOS call to Caretaker
             try {
                 const response = await fetch('http://127.0.0.1:5000/api/sos', {
@@ -171,7 +171,7 @@ export default function ElderlyDashboard() {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                
+
                 if (response.ok) {
                     setTranscription("🆘 EMERGENCY ALERT SENT! Calling your caretaker now...");
                 } else {
@@ -184,7 +184,7 @@ export default function ElderlyDashboard() {
                 console.error("Error triggering SOS call:", error);
                 setTranscription(prev => prev + " (Network error on call)");
             }
-            
+
             setTimeout(() => {
                 if (stopRecordingRef.current) {
                     console.log("SOS 30-second timeout reached. Stopping recording.");
@@ -301,14 +301,13 @@ export default function ElderlyDashboard() {
                                                 <span className="font-bold opacity-75">You:</span> "{log.text}"
                                             </p>
                                             {log.sentiment && (
-                                                <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${
-                                                    log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
-                                                    log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
-                                                    'bg-gray-200 text-gray-700'
-                                                }`}>
+                                                <span className={`text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap ${log.sentiment === 'Positive' ? 'bg-green-100 text-green-700' :
+                                                        log.sentiment === 'Negative' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-200 text-gray-700'
+                                                    }`}>
                                                     {log.sentiment === 'Positive' ? '😊 Positive' :
-                                                     log.sentiment === 'Negative' ? '🚨 Critical' :
-                                                     '😐 Neutral'}
+                                                        log.sentiment === 'Negative' ? '🚨 Critical' :
+                                                            '😐 Neutral'}
                                                 </span>
                                             )}
                                         </div>

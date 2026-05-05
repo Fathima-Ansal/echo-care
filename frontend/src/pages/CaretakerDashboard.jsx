@@ -64,11 +64,11 @@ export default function CaretakerDashboard() {
             .then(data => {
                 if (Array.isArray(data)) {
                     setHealthLogs(data);
-                    
+
                     // Generate notifications for critical sentiments (received as Negative from AI)
                     const criticalLogs = data.filter(log => log.sentiment === 'Negative')
-                                             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                                             
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
                     if (criticalLogs.length > 0) {
                         const newNotifications = criticalLogs.map(log => ({
                             id: log._id || log.id,
@@ -77,10 +77,10 @@ export default function CaretakerDashboard() {
                             time: log.timestamp || new Date().toISOString(),
                             priority: 'high'
                         }));
-                        
+
                         // Set the top 10 newest directly in header notifications to avoid duplicate loops
                         setNotifications(newNotifications.slice(0, 10));
-                        
+
                         // Trigger critical popup ONLY for the absolute newest log, if not yet acknowledged
                         const newestAlert = newNotifications[0];
                         if (!ackedAlertsRef.current.has(newestAlert.id)) {
@@ -89,7 +89,7 @@ export default function CaretakerDashboard() {
                                 if (current.length > 0 && current[0].id === newestAlert.id) {
                                     return current;
                                 }
-                                playAlertSound();
+                                // playAlertSound();
                                 return [newestAlert];
                             });
                         }
@@ -105,7 +105,7 @@ export default function CaretakerDashboard() {
     // Flashing Tab Title for Unacknowledged Alerts
     useEffect(() => {
         let titleInterval;
-        
+
         if (criticalAlerts.length > 0) {
             titleInterval = setInterval(() => {
                 document.title = document.title === '🚨 URGENT ALERT' ? 'EchoCare Dashboard' : '🚨 URGENT ALERT';
@@ -113,7 +113,7 @@ export default function CaretakerDashboard() {
         } else {
             document.title = 'EchoCare Dashboard';
         }
-        
+
         return () => {
             clearInterval(titleInterval);
             document.title = 'EchoCare Dashboard';
@@ -195,7 +195,7 @@ export default function CaretakerDashboard() {
                             </button>
                             {/* Notification Bell */}
                             <div className="relative">
-                                <button 
+                                <button
                                     onClick={() => setShowNotifications(!showNotifications)}
                                     className="p-2.5 rounded-xl bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-[#41431B] transition-all border border-gray-100 relative"
                                 >
@@ -247,11 +247,11 @@ export default function CaretakerDashboard() {
                                 <p className="text-sm font-bold text-[#41431B] capitalize">{getCaregiverName()}</p>
                                 <p className="text-[10px] font-bold text-[#AEB784]">Caregiver</p>
                             </div>
-                            
+
                             {/* Profile Button */}
-                            <button 
+                            <button
                                 onClick={() => setShowProfile(true)}
-                                className="p-2.5 rounded-xl bg-[#AEB784]/10 text-[#41431B] hover:bg-[#AEB784]/20 transition-all border border-[#AEB784]/20" 
+                                className="p-2.5 rounded-xl bg-[#AEB784]/10 text-[#41431B] hover:bg-[#AEB784]/20 transition-all border border-[#AEB784]/20"
                                 title="Account Profile"
                             >
                                 <div className="w-6 h-6 rounded-full bg-[#AEB784] flex items-center justify-center text-white text-xs font-bold shadow-sm">
@@ -265,7 +265,7 @@ export default function CaretakerDashboard() {
                                 className="flex items-center gap-2 bg-white border-2 border-red-100 hover:border-red-200 hover:bg-red-50 text-red-600 px-5 py-2 rounded-full shadow-sm text-sm font-bold transition-all"
                             >
                                 <span className="hidden sm:inline">Logout</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
                             </button>
                         </div>
                     </div>
@@ -284,258 +284,258 @@ export default function CaretakerDashboard() {
 
             <div className="w-full flex flex-col items-center p-4 md:p-8">
 
-            <main className="w-full max-w-screen-2xl space-y-8 print:m-0 print:space-y-4">
-                {/* --- Create Elderly Account Section --- */}
-                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:hidden transition-colors duration-300">
-                    <h2 className="text-xl font-extrabold text-[#41431B]  mb-2">Manage Elderly Accounts</h2>
-                    <p className="text-sm text-[#7a8450]  mb-4 font-bold">Create login credentials for the elderly users you care for.</p>
+                <main className="w-full max-w-screen-2xl space-y-8 print:m-0 print:space-y-4">
+                    {/* --- Create Elderly Account Section --- */}
+                    <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:hidden transition-colors duration-300">
+                        <h2 className="text-xl font-extrabold text-[#41431B]  mb-2">Manage Elderly Accounts</h2>
+                        <p className="text-sm text-[#7a8450]  mb-4 font-bold">Create login credentials for the elderly users you care for.</p>
 
-                    {createMsg.text && (
-                        <div className={`p-3 rounded-lg mb-4 text-sm ${createMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
-                            {createMsg.text}
-                        </div>
-                    )}
+                        {createMsg.text && (
+                            <div className={`p-3 rounded-lg mb-4 text-sm ${createMsg.type === 'error' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+                                {createMsg.text}
+                            </div>
+                        )}
 
-                    <form
-                        className="flex flex-col md:flex-row gap-4 items-start md:items-end"
-                        onSubmit={async (e) => {
-                            e.preventDefault();
-                            setCreateMsg({ text: '', type: '' });
-                            setIsCreating(true);
+                        <form
+                            className="flex flex-col md:flex-row gap-4 items-start md:items-end"
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                setCreateMsg({ text: '', type: '' });
+                                setIsCreating(true);
 
-                            try {
-                                const response = await fetch('http://localhost:5000/api/create-elderly', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({ 
-                                        email: elderlyEmail, 
-                                        password: elderlyPassword,
-                                        preferred_language: elderlyLanguage
-                                    }),
-                                });
+                                try {
+                                    const response = await fetch('http://localhost:5000/api/create-elderly', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${token}`
+                                        },
+                                        body: JSON.stringify({
+                                            email: elderlyEmail,
+                                            password: elderlyPassword,
+                                            preferred_language: elderlyLanguage
+                                        }),
+                                    });
 
-                                const data = await response.json();
+                                    const data = await response.json();
 
-                                if (!response.ok) throw new Error(data.error || 'Failed to create account');
+                                    if (!response.ok) throw new Error(data.error || 'Failed to create account');
 
-                                setCreateMsg({ text: 'Account created successfully!', type: 'success' });
-                                setElderlyEmail('');
-                                setElderlyPassword('');
+                                    setCreateMsg({ text: 'Account created successfully!', type: 'success' });
+                                    setElderlyEmail('');
+                                    setElderlyPassword('');
 
-                                setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
-                            } catch (err) {
-                                setCreateMsg({ text: err.message, type: 'error' });
-                            } finally {
-                                setIsCreating(false);
-                            }
-                        }}
-                    >
-                        <div className="flex-1 w-full">
-                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Username / Email</label>
-                            <input
-                                type="text"
-                                required
-                                value={elderlyEmail}
-                                onChange={(e) => setElderlyEmail(e.target.value)}
-                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                                placeholder="e.g. grandpa_joe"
-                            />
-                        </div>
-                        <div className="flex-1 w-full">
-                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Password</label>
-                            <input
-                                type="password"
-                                required
-                                value={elderlyPassword}
-                                onChange={(e) => setElderlyPassword(e.target.value)}
-                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                                placeholder="Create a password"
-                            />
-                        </div>
-                        <div className="flex-1 w-full">
-                            <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Language</label>
-                            <select
-                                value={elderlyLanguage}
-                                onChange={(e) => setElderlyLanguage(e.target.value)}
-                                className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
-                            >
-                                <option value="ml-IN">Malayalam (മലയാളം)</option>
-                                <option value="en-US">English (US)</option>
-                                <option value="en-IN">English (India)</option>
-                                <option value="hi-IN">Hindi (हिन्दी)</option>
-                                <option value="ta-IN">Tamil (தமிழ்)</option>
-                                <option value="te-IN">Telugu (తెలుగు)</option>
-                                <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
-                                <option value="mr-IN">Marathi (मराठी)</option>
-                                <option value="gu-IN">Gujarati (ગુજરાતી)</option>
-                                <option value="bn-IN">Bengali (বাংলা)</option>
-                                <option value="es-ES">Spanish (Español)</option>
-                                <option value="fr-FR">French (Français)</option>
-                                <option value="de-DE">German (Deutsch)</option>
-                                <option value="it-IT">Italian (Italiano)</option>
-                                <option value="pt-BR">Portuguese (Português)</option>
-                                <option value="ru-RU">Russian (Русский)</option>
-                                <option value="ar-SA">Arabic (العربية)</option>
-                                <option value="zh-CN">Chinese (中文)</option>
-                                <option value="ja-JP">Japanese (日本語)</option>
-                                <option value="ko-KR">Korean (한국어)</option>
-                            </select>
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isCreating}
-                            className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
+                                    setTimeout(() => setCreateMsg({ text: '', type: '' }), 5000);
+                                } catch (err) {
+                                    setCreateMsg({ text: err.message, type: 'error' });
+                                } finally {
+                                    setIsCreating(false);
+                                }
+                            }}
                         >
-                            {isCreating ? 'Creating...' : 'Create Account'}
-                        </button>
-                    </form>
-                </section>
-
-                {/* Health Records Table */}
-                <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:border-none print:shadow-none print:p-0 transition-colors duration-300">
-                    <div className="flex items-center justify-between mb-6 print:hidden">
-                        <h2 className="text-xl font-extrabold text-[#41431B] ">Health Records</h2>
-                        <button 
-                            onClick={downloadPDF}
-                            className="flex items-center gap-1 text-sm bg-[#AEB784]/10 text-[#AEB784] hover:bg-[#AEB784]/20 px-3 py-1.5 rounded-lg font-bold transition-colors"
-                        >
-                            <Download className="w-4 h-4" /> Download PDF
-                        </button>
-                    </div>
-
-                    {/* FILTERS */}
-                    <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
-                        <div className="flex flex-col">
-                            <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Date</label>
-                            <div className="flex items-center gap-2">
-                                <input 
-                                    type="date"
-                                    value={selectedDate} 
-                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                    style={{ colorScheme: isDarkMode ? 'dark' : 'light' }}
-                                    className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
+                            <div className="flex-1 w-full">
+                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Username / Email</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={elderlyEmail}
+                                    onChange={(e) => setElderlyEmail(e.target.value)}
+                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                    placeholder="e.g. grandpa_joe"
                                 />
-                                {selectedDate && (
-                                    <button 
-                                        onClick={() => setSelectedDate('')}
-                                        className="text-xs text-[#AEB784] hover:text-[#41431B] font-bold underline transition-colors"
+                            </div>
+                            <div className="flex-1 w-full">
+                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={elderlyPassword}
+                                    onChange={(e) => setElderlyPassword(e.target.value)}
+                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                    placeholder="Create a password"
+                                />
+                            </div>
+                            <div className="flex-1 w-full">
+                                <label className="block text-sm font-bold text-[#41431B] mb-1 opacity-80">Language</label>
+                                <select
+                                    value={elderlyLanguage}
+                                    onChange={(e) => setElderlyLanguage(e.target.value)}
+                                    className="w-full px-4 py-2 border border-[#AEB784]/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#AEB784]/40 focus:border-[#AEB784] transition-colors bg-white text-[#41431B]"
+                                >
+                                    <option value="ml-IN">Malayalam (മലയാളം)</option>
+                                    <option value="en-US">English (US)</option>
+                                    <option value="en-IN">English (India)</option>
+                                    <option value="hi-IN">Hindi (हिन्दी)</option>
+                                    <option value="ta-IN">Tamil (தமிழ்)</option>
+                                    <option value="te-IN">Telugu (తెలుగు)</option>
+                                    <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                                    <option value="mr-IN">Marathi (मराठी)</option>
+                                    <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+                                    <option value="bn-IN">Bengali (বাংলা)</option>
+                                    <option value="es-ES">Spanish (Español)</option>
+                                    <option value="fr-FR">French (Français)</option>
+                                    <option value="de-DE">German (Deutsch)</option>
+                                    <option value="it-IT">Italian (Italiano)</option>
+                                    <option value="pt-BR">Portuguese (Português)</option>
+                                    <option value="ru-RU">Russian (Русский)</option>
+                                    <option value="ar-SA">Arabic (العربية)</option>
+                                    <option value="zh-CN">Chinese (中文)</option>
+                                    <option value="ja-JP">Japanese (日本語)</option>
+                                    <option value="ko-KR">Korean (한국어)</option>
+                                </select>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={isCreating}
+                                className="w-full md:w-auto px-6 py-2 bg-[#AEB784] hover:bg-[#8a9461] disabled:bg-[#c8d1a1] text-white rounded-lg font-bold shadow-sm transition-colors mt-4 md:mt-0 h-[42px]"
+                            >
+                                {isCreating ? 'Creating...' : 'Create Account'}
+                            </button>
+                        </form>
+                    </section>
+
+                    {/* Health Records Table */}
+                    <section className="bg-white  p-6 rounded-2xl border-2 border-[#AEB784]/40  shadow-xl drop-shadow-sm print:border-none print:shadow-none print:p-0 transition-colors duration-300">
+                        <div className="flex items-center justify-between mb-6 print:hidden">
+                            <h2 className="text-xl font-extrabold text-[#41431B] ">Health Records</h2>
+                            <button
+                                onClick={downloadPDF}
+                                className="flex items-center gap-1 text-sm bg-[#AEB784]/10 text-[#AEB784] hover:bg-[#AEB784]/20 px-3 py-1.5 rounded-lg font-bold transition-colors"
+                            >
+                                <Download className="w-4 h-4" /> Download PDF
+                            </button>
+                        </div>
+
+                        {/* FILTERS */}
+                        <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
+                            <div className="flex flex-col">
+                                <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Date</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="date"
+                                        value={selectedDate}
+                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        style={{ colorScheme: isDarkMode ? 'dark' : 'light' }}
+                                        className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
+                                    />
+                                    {selectedDate && (
+                                        <button
+                                            onClick={() => setSelectedDate('')}
+                                            className="text-xs text-[#AEB784] hover:text-[#41431B] font-bold underline transition-colors"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex flex-col">
+                                <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Status</label>
+                                <select
+                                    value={selectedSentiment}
+                                    onChange={(e) => setSelectedSentiment(e.target.value)}
+                                    className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
+                                >
+                                    <option value="All">All Statuses</option>
+                                    <option value="Critical">Critical Only</option>
+                                    <option value="Positive">Positive</option>
+                                    <option value="Neutral">Neutral</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white  transition-colors duration-300">
+                            {/* We add a title inside the container specifically for the PDF download */}
+                            <div className="hidden print:block mb-6 border-b-2 border-gray-800 pb-4">
+                                <h1 className="text-4xl font-extrabold text-black mb-2">EchoCare Health Logs</h1>
+                                <p className="text-xl font-bold text-gray-800">
+                                    Date: {selectedDate ? selectedDate : 'All Dates'}
+                                </p>
+                            </div>
+
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="text-sm text-[#AEB784] print:text-black border-b border-[#AEB784]/20 print:border-black">
+                                        <th className="py-3 font-bold print:font-extrabold">Date</th>
+                                        <th className="py-3 font-bold print:font-extrabold">User</th>
+                                        <th className="py-3 font-bold print:font-extrabold">Type</th>
+                                        <th className="py-3 font-bold print:font-extrabold">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {displayedLogs.length > 0 ? (
+                                        displayedLogs.map((log) => {
+                                            const isExpanded = expandedLogs.has(log._id || log.id);
+                                            return (
+                                                <tr key={log._id || log.id} className="border-b border-[#AEB784]/10 print:border-gray-300 last:border-0 hover:bg-[#F9F9F6] transition-colors">
+                                                    <td className="py-4 text-[#41431B] print:text-black text-sm font-medium">
+                                                        {new Date(log.timestamp).toLocaleDateString()}
+                                                        <br />
+                                                        <span className="text-xs text-[#AEB784] print:text-gray-800">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </td>
+                                                    <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
+                                                        {log.elderly_name || "Unknown"}
+                                                    </td>
+                                                    <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
+                                                        <div className="flex flex-col gap-2 items-start">
+                                                            <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] print:text-black print:border print:border-black font-bold">
+                                                                Voice Log
+                                                            </span>
+                                                            {log.sentiment && (
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${log.sentiment === 'Positive' ? 'bg-green-100 text-green-700 print:bg-white print:text-black print:border print:border-black' :
+                                                                        log.sentiment === 'Negative' ? 'bg-red-100 text-red-700 print:bg-white print:text-black print:border print:border-black' :
+                                                                            'bg-gray-200 text-gray-700 print:bg-white print:text-black print:border print:border-black'
+                                                                    }`}>
+                                                                    {log.sentiment === 'Negative' ? 'CRITICAL' : log.sentiment}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 text-[#41431B] print:text-black text-sm print:text-base font-semibold max-w-xs print:whitespace-normal print:max-w-none">
+                                                        <div className={isExpanded ? "" : "truncate"} title={isExpanded ? "" : log.text}>
+                                                            "{log.text}"
+                                                        </div>
+                                                        {log.text && log.text.length > 40 && (
+                                                            <button
+                                                                onClick={() => toggleLogExpansion(log._id || log.id)}
+                                                                className="text-[10px] uppercase tracking-wider text-[#AEB784] hover:text-[#6a7536] mt-1.5 font-bold block print:hidden"
+                                                            >
+                                                                {isExpanded ? "Show Less" : "Read More"}
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4" className="py-4 text-center text-[#AEB784] font-medium">No logs found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+
+                            <div className="flex justify-center gap-4 mt-6 print:hidden">
+                                {visibleLogsCount < filteredLogs.length && (
+                                    <button
+                                        onClick={() => setVisibleLogsCount(prev => prev + 10)}
+                                        className="px-6 py-2.5 bg-[#AEB784] text-white hover:bg-[#8a9461] shadow-md rounded-xl font-bold transition-all text-sm flex items-center gap-2"
                                     >
-                                        Clear
+                                        Load More Logs
+                                    </button>
+                                )}
+                                {visibleLogsCount > 10 && (
+                                    <button
+                                        onClick={() => setVisibleLogsCount(10)}
+                                        className="px-6 py-2.5 bg-gray-200 text-gray-800 hover:bg-gray-300 shadow-sm rounded-xl font-bold transition-all text-sm flex items-center gap-2"
+                                    >
+                                        Show Less Logs
                                     </button>
                                 )}
                             </div>
                         </div>
-                        <div className="flex flex-col">
-                            <label className="text-xs font-bold text-[#AEB784] mb-1 uppercase tracking-wider">Filter by Status</label>
-                            <select 
-                                value={selectedSentiment} 
-                                onChange={(e) => setSelectedSentiment(e.target.value)}
-                                className="px-3 py-2 bg-[#F9F9F6] border border-[#AEB784]/30 rounded-lg text-sm text-[#41431B] font-medium focus:outline-none focus:border-[#AEB784] transition-colors"
-                            >
-                                <option value="All">All Statuses</option>
-                                <option value="Critical">Critical Only</option>
-                                <option value="Positive">Positive</option>
-                                <option value="Neutral">Neutral</option>
-                            </select>
-                        </div>
-                    </div>
+                    </section>
 
-                    <div id="health-records-table-container" className="overflow-x-auto p-4 bg-white  transition-colors duration-300">
-                        {/* We add a title inside the container specifically for the PDF download */}
-                        <div className="hidden print:block mb-6 border-b-2 border-gray-800 pb-4">
-                            <h1 className="text-4xl font-extrabold text-black mb-2">EchoCare Health Logs</h1>
-                            <p className="text-xl font-bold text-gray-800">
-                                Date: {selectedDate ? selectedDate : 'All Dates'}
-                            </p>
-                        </div>
-                        
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="text-sm text-[#AEB784] print:text-black border-b border-[#AEB784]/20 print:border-black">
-                                    <th className="py-3 font-bold print:font-extrabold">Date</th>
-                                    <th className="py-3 font-bold print:font-extrabold">User</th>
-                                    <th className="py-3 font-bold print:font-extrabold">Type</th>
-                                    <th className="py-3 font-bold print:font-extrabold">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {displayedLogs.length > 0 ? (
-                                    displayedLogs.map((log) => {
-                                        const isExpanded = expandedLogs.has(log._id || log.id);
-                                        return (
-                                        <tr key={log._id || log.id} className="border-b border-[#AEB784]/10 print:border-gray-300 last:border-0 hover:bg-[#F9F9F6] transition-colors">
-                                            <td className="py-4 text-[#41431B] print:text-black text-sm font-medium">
-                                                {new Date(log.timestamp).toLocaleDateString()}
-                                                <br />
-                                                <span className="text-xs text-[#AEB784] print:text-gray-800">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                            </td>
-                                            <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
-                                                {log.elderly_name || "Unknown"}
-                                            </td>
-                                            <td className="py-4 text-[#41431B] print:text-black font-medium text-sm">
-                                                <div className="flex flex-col gap-2 items-start">
-                                                    <span className="px-2 py-1 rounded-full text-xs bg-[#AEB784]/20 text-[#6a7536] print:text-black print:border print:border-black font-bold">
-                                                        Voice Log
-                                                    </span>
-                                                    {log.sentiment && (
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                            log.sentiment === 'Positive' ? 'bg-green-100 text-green-700 print:bg-white print:text-black print:border print:border-black' :
-                                                            log.sentiment === 'Negative' ? 'bg-red-100 text-red-700 print:bg-white print:text-black print:border print:border-black' :
-                                                            'bg-gray-200 text-gray-700 print:bg-white print:text-black print:border print:border-black'
-                                                        }`}>
-                                                            {log.sentiment === 'Negative' ? 'CRITICAL' : log.sentiment}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="py-4 text-[#41431B] print:text-black text-sm print:text-base font-semibold max-w-xs print:whitespace-normal print:max-w-none">
-                                                <div className={isExpanded ? "" : "truncate"} title={isExpanded ? "" : log.text}>
-                                                    "{log.text}"
-                                                </div>
-                                                {log.text && log.text.length > 40 && (
-                                                    <button 
-                                                        onClick={() => toggleLogExpansion(log._id || log.id)} 
-                                                        className="text-[10px] uppercase tracking-wider text-[#AEB784] hover:text-[#6a7536] mt-1.5 font-bold block print:hidden"
-                                                    >
-                                                        {isExpanded ? "Show Less" : "Read More"}
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    )})
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="py-4 text-center text-[#AEB784] font-medium">No logs found.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                        
-                        <div className="flex justify-center gap-4 mt-6 print:hidden">
-                            {visibleLogsCount < filteredLogs.length && (
-                                <button
-                                    onClick={() => setVisibleLogsCount(prev => prev + 10)}
-                                    className="px-6 py-2.5 bg-[#AEB784] text-white hover:bg-[#8a9461] shadow-md rounded-xl font-bold transition-all text-sm flex items-center gap-2"
-                                >
-                                    Load More Logs
-                                </button>
-                            )}
-                            {visibleLogsCount > 10 && (
-                                <button
-                                    onClick={() => setVisibleLogsCount(10)}
-                                    className="px-6 py-2.5 bg-gray-200 text-gray-800 hover:bg-gray-300 shadow-sm rounded-xl font-bold transition-all text-sm flex items-center gap-2"
-                                >
-                                    Show Less Logs
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </section>
-
-            </main>
+                </main>
             </div>
 
             {/* PROFILE MODAL */}
@@ -543,7 +543,7 @@ export default function CaretakerDashboard() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="relative p-8 flex flex-col items-center">
-                            <button 
+                            <button
                                 onClick={() => setShowProfile(false)}
                                 className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
                             >
@@ -574,7 +574,7 @@ export default function CaretakerDashboard() {
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                     <p className="text-[10px] font-bold text-[#AEB784] uppercase tracking-wider mb-1">Alert Contact Number</p>
-                                    <input 
+                                    <input
                                         type="tel"
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
@@ -583,7 +583,7 @@ export default function CaretakerDashboard() {
                                     />
                                 </div>
                             </div>
-                            
+
                             {profileMsg.text && (
                                 <p className={`text-xs mb-4 font-bold ${profileMsg.type === 'success' ? 'text-green-600' : 'text-red-500'}`}>
                                     {profileMsg.text}
@@ -652,7 +652,7 @@ export default function CaretakerDashboard() {
                                 className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-bold text-lg rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                                 Acknowledge
                             </button>
