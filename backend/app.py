@@ -26,7 +26,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key_for_
 
 # ---------------- MongoDB Connection ---------------- #
 
-MONGO_URI = "mongodb+srv://echocare_user:echocarepass@echocare-cluster.plr3b2d.mongodb.net/?retryWrites=true&w=majority&appName=EchoCare-cluster"
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://echocare_user:echocarepass@echocare-cluster.plr3b2d.mongodb.net/?retryWrites=true&w=majority&appName=EchoCare-cluster")
 
 client = MongoClient(MONGO_URI)
 db = client["echocare_db"]           # Database name
